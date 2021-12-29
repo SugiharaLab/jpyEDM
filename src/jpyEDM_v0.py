@@ -223,6 +223,13 @@ def LoadButtonClicked( b = None ):
     '''Establish dataFrameIn : Always passed to pyEDM'''
     global dataFrameIn
 
+    if len( args.inputFile ) == 0 :
+        # Load button clicked but inputFile is empty
+        dfOutput.clear_output()
+        with dfOutput :
+            display( print( "Data file empty, nothing loaded." ) )
+        return
+    
     dataFrameIn = ReadCSV()
     RefreshData()
     

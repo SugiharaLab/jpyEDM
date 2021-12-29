@@ -13,15 +13,21 @@ Functionality includes:
 ## Installation
 
 ### pyEDM Python Package
-Certain MacOS, Linux and Windows platforms have prebuilt binary distributions hosted on PyPI [pyEDM](https://pypi.org/project/pyEDM/). 
+pyEDM is hosted on the Python Package Index respository (PyPI) at [pyEDM](https://pypi.org/project/pyEDM/).
 
-Command line using the Python pip module: `python -m pip install pyEDM`
+It can be installed from the command line using the Python pip module: `python -m pip install pyEDM`.
 
 ### Jupyter notebook
-Download the jpyEDM source. Start Jupyter notebook. Open `"jpyEDM/notebooks/pyEDM Version 0.ipynb"`.
+Download the jpyEDM source.  
+Start Jupyter notebook.  
+Open `"jpyEDM/notebooks/pyEDM Version 0.ipynb"`.
 
 ---
-### Screenshot
+## Introduction
+A brief [video presentation](https://github.com/SugiharaLab/jpyEDM/blob/master/doc/jpyEDM_Introduction-2021-12-29.mp4).
+
+---
+## Screenshot
 ![picture alt](https://github.com/SugiharaLab/jpyEDM/blob/master/doc/jpyEDM-CCM-Screen.png "CCM Lorenz 5D")
 
 ---
