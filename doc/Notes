@@ -1,0 +1,65 @@
+
+
+S12 data has ISO date string as first column. Need to convert to numeric.
+
+
+=================================================================
+jpyEDM + pyEDM 1.10 Features in relation to rEDM 0.7
+=================================================================
+
+Simplex & SMap
+  Conditional Embedding (CE)
+  Generative mode
+
+SMap
+  Regularized solvers
+
+Multiview
+  Evaluate predictions out-of-sample
+  Ignore target data in predictions/evaluations
+
+
+=================================================================
+matplotlib
+=================================================================
+
+https://matplotlib.org/3.4.3/_modules/matplotlib/pyplot.html
+------------------------------------------------------------
+The jupyter backends (activated via ``%matplotlib inline``,
+``%matplotlib notebook``, or ``%matplotlib widget``), call ``show()`` at
+the end of every cell by default. Thus, you usually don't have to call it
+explicitly there.
+
+If you are creating many figures, make sure you explicitly call
+`.pyplot.close` on the figures you are not using, because this will
+enable pyplot to properly clean up the memory.
+
+
+=================================================================
+matplotlib interactive
+=================================================================
+
+https://matplotlib.org/stable/users/explain/interactive.html
+https://github.com/matplotlib/ipympl
+------------------------------------------------------------
+Matplotlib keeps a reference to all of the open figures created via
+pyplot.figure or pyplot.subplots so that the figures will not be
+garbage collected. Figures can be closed and deregistered from pyplot
+individually via pyplot.close; all open Figures can be closed via
+plt.close('all').
+
+We recommend using IPython for an interactive shell.
+It ensures the GUI toolkit event loop is properly integrated
+with the command line.   -- matplotlib
+
+This notebook uses the
+    %matplotlib notebook
+"magic" in the notebook cell to select matplotlib interactive plots.
+This will not work in Jupyter Lab.
+
+For Jupyter Lab, install the ipympl backend and use:
+    %matplotlib widget
+
+-----------------------------------------------------------------
+ipywidgets https://ipywidgets.readthedocs.io/en/latest/index.html
+
