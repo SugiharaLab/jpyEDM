@@ -17,9 +17,12 @@ Certain MacOS, Linux and Windows platforms have prebuilt binary distributions ho
 
 Command line using the Python pip module: `python -m pip install pyEDM`
 
+### Jupyter notebook
+Download the jpyEDM source. Start Jupyter notebook. Open `"jpyEDM/notebooks/pyEDM Version 0.ipynb"`.
+
 ---
 ### Screenshot
-![picture alt](../doc/jpyEDM-CCM-Screen.png "CCM Lorenz 5D")
+![picture alt](https://github.com/SugiharaLab/jpyEDM/blob/master/doc/jpyEDM-CCM-Screen.png "CCM Lorenz 5D")
 
 ---
 ### References
