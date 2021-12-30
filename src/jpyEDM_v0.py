@@ -223,6 +223,7 @@ def LoadButtonClicked( b = None ):
     '''Establish dataFrameIn : Always passed to pyEDM'''
     global dataFrameIn
 
+    UpdateArgs()
     if len( args.inputFile ) == 0 :
         # Load button clicked but inputFile is empty
         dfOutput.clear_output()
@@ -460,8 +461,7 @@ def Dashboard():
     Widgets['verbose']         = verbose
     Widgets['running']         = running
 
-    UpdateArgs()
-    LoadButtonClicked() # Try to load initial data
+    LoadButtonClicked() # UpdateArgs() & load initial data
     DataDashboard()     # Default start up
 
 #============================================================================
