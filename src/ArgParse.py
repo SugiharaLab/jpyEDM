@@ -174,7 +174,7 @@ def ParseCmdLine():
 
     parser.add_argument('-i', '--inputFile',
                         dest   = 'inputFile', type = str, 
-                        action = 'store',     default = None,
+                        action = 'store',     default = '../data/Lorenz5D.csv',
                         help = 'Input observation file.')
 
     parser.add_argument('-o', '--outputFile',
