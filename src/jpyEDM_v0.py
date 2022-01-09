@@ -259,8 +259,8 @@ def RefreshData():
         Widgets[ 'pred'       ].max     = dataFrameIn.shape[0]
         Widgets[ 'lib'        ].min     = 1
         Widgets[ 'lib'        ].max     = dataFrameIn.shape[0]
-        Widgets[ 'columns'    ].value   = dataFrameIn.columns[1]
-        Widgets[ 'target'     ].value   = dataFrameIn.columns[1]
+        Widgets[ 'columns'    ].options = dataFrameIn.columns[1:]
+        Widgets[ 'target'     ].options = dataFrameIn.columns[1:]
         
         UpdateArgs()
 
@@ -309,9 +309,9 @@ def Dashboard():
     pred = widgets.IntRangeSlider( value=[501,600], min=1, max=1000, step=1,
                                    description='pred' )
     
-    columns = widgets.Text( value='V3', description='columns')
+    columns = widgets.SelectMultiple( description='columns', rows = 3 )
     
-    target = widgets.Text( value='V3', description='target')
+    target = widgets.Dropdown( options=[], description='target' )
     
     tau = widgets.IntSlider( value=-1, min=-20, max=20, step=1,
                              description='tau')
@@ -479,7 +479,7 @@ def UpdateArgs():
     args.theta           = Widgets['theta'].value
     args.thetas          = Widgets['thetas'].value
     args.tau             = Widgets['tau'].value
-    args.columns         = Widgets['columns'].value # .split()
+    args.columns         = Widgets['columns'].value
     args.target          = Widgets['target'].value
     args.multiview       = Widgets['multiview'].value
     args.trainLib        = Widgets['trainLib'].value
