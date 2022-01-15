@@ -38,17 +38,18 @@ def PlotPredictInterval( df, args ):
 #----------------------------------------------------------------------------
 def Plot3D( D, columnList ):
 
-    fig = plt.figure().gca( projection = '3d' )
+    fig = plt.figure()
+    ax  = fig.add_subplot( projection = '3d' )
 
     X, Y, Z = D[ columnList[0] ], \
               D[ columnList[1] ], \
               D[ columnList[2] ]
 
     # Plot
-    fig.scatter( X, Y, Z, zdir = 'z', s = 20, c = None, depthshade = True )
-    fig.set_xlabel( columnList[0] )
-    fig.set_ylabel( columnList[1] )
-    fig.set_zlabel( columnList[2] )
+    ax.scatter( X, Y, Z, zdir = 'z', s = 20, c = None, depthshade = True )
+    ax.set_xlabel( columnList[0] )
+    ax.set_ylabel( columnList[1] )
+    ax.set_zlabel( columnList[2] )
 
 #----------------------------------------------------------------------------
 # 
