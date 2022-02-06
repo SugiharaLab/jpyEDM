@@ -555,7 +555,9 @@ def PredictNonlinearDashboard():
                                 Widgets['tau'], Widgets['thetas'] ] )
     
     right_box = widgets.VBox( [ Widgets['fileImport'], Widgets['outputFile'],
-                                Widgets['nThreads'],   Widgets['plot'] ] )
+                                Widgets['nThreads'],
+                                widgets.HBox( [ Widgets['plot'],
+                                                Widgets['embedded'] ] ) ] )
     
     RenderDashboard( left_box, mid_box, right_box )
 
@@ -572,7 +574,9 @@ def PredictIntervalDashboard():
                                 Widgets['E'], Widgets['tau'] ] )
     
     right_box = widgets.VBox( [ Widgets['fileImport'], Widgets['outputFile'],
-                                Widgets['nThreads'],   Widgets['plot'] ] )
+                                Widgets['nThreads'],
+                                widgets.HBox( [ Widgets['plot'],
+                                                Widgets['embedded'] ] ) ] )
     
     RenderDashboard( left_box, mid_box, right_box )
 
@@ -628,8 +632,7 @@ def CCMDashboard():
     
     right_box = widgets.VBox( [ Widgets['fileImport'], Widgets['outputFile'],
                                 widgets.VBox( [
-                                    widgets.HBox( [ Widgets['plot'],
-                                                    Widgets['embedded'] ] ),
+                                    widgets.HBox( [ Widgets['plot'] ] ),
                                     widgets.HBox( [ Widgets['randomLib'],
                                                     Widgets['replacement'] ] )
                                 ] ) ] )

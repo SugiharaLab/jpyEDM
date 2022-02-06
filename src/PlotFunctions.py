@@ -8,7 +8,7 @@ from   pyEDM                import ComputeError
 #----------------------------------------------------------------------------
 def PlotEmbedDimension( df, args ):
     title = args.inputFile + "\nTp=" + str(args.Tp)
-    
+
     ax = df.plot( 'E', 'rho', title = title, linewidth = 3 )
     ax.set( xlabel = "Embedding Dimension",
             ylabel = "Prediction Skill ρ" )
@@ -17,8 +17,14 @@ def PlotEmbedDimension( df, args ):
 # 
 #----------------------------------------------------------------------------
 def PlotPredictNonlinear( df, args ):
-    title = args.inputFile + "\nE=" + str(args.E)
-    
+
+    if args.embedded :
+        E = len( args.columns )
+    else :
+        E = args.E
+
+    title = args.inputFile + "\nE=" + str( E )
+
     ax = df.plot( 'Theta', 'rho', title = title, linewidth = 3 )
     ax.set( xlabel = "S-map Localisation (θ)",
             ylabel = "Prediction Skill ρ" )
@@ -27,8 +33,14 @@ def PlotPredictNonlinear( df, args ):
 # 
 #----------------------------------------------------------------------------
 def PlotPredictInterval( df, args ):
-    title = args.inputFile + "\nE=" + str(args.E)
-    
+
+    if args.embedded :
+        E = len( args.columns )
+    else :
+        E = args.E
+
+    title = args.inputFile + "\nE=" + str( E )
+
     ax = df.plot( 'Tp', 'rho', title = title, linewidth = 3 )
     ax.set( xlabel = "Forecast Interval",
             ylabel = "Prediction Skill ρ" )
@@ -55,7 +67,7 @@ def Plot3D( D, columnList ):
 # 
 #----------------------------------------------------------------------------
 def PlotCCM( libMeans, args ):
-    title = args.inputFile + "\nE=" + str(args.E)
+    title = args.inputFile + "\nE=" + str( args.E )
 
     ax = libMeans.plot( 'LibSize',
                         [ libMeans.columns[1], libMeans.columns[2] ],
@@ -67,23 +79,33 @@ def PlotCCM( libMeans, args ):
 # 
 #----------------------------------------------------------------------------
 def PlotObsPred_( df, args ):
-    
+
     # stats: {'MAE': 0., 'RMSE': 0., 'rho': 0. }
     stats = ComputeError( df['Observations'], df['Predictions' ] )
 
-    title = args.inputFile + "\nE=" + str(args.E) + " Tp=" + str(args.Tp) +\
-            "  ρ="   + str( round( stats['rho'],  2 ) )   +\
+    if args.embedded :
+        E = len( args.columns )
+    else :
+        E = args.E
+
+    title = args.inputFile + "\nE=" + str( E ) + " Tp=" + str( args.Tp ) +\
+            "  ρ="   + str( round( stats['rho'],  2 ) ) +\
             " RMSE=" + str( round( stats['RMSE'], 2 ) )
 
     df.plot( df.columns[0], ['Observations', 'Predictions'],
              title = title, linewidth = 3 )
-    
+
 #----------------------------------------------------------------------------
 # 
 #----------------------------------------------------------------------------
 def PlotCoeff_( df, args ):
-                     
-    title = args.inputFile + "\nE=" + str(args.E) + " Tp=" + str(args.Tp) +\
+
+    if args.embedded :
+        E = len( args.columns )
+    else :
+        E = args.E
+
+    title = args.inputFile + "\nE=" + str( E ) + " Tp=" + str( args.Tp ) +\
             "  S-Map Coefficients"
 
     time_col = df.columns[0]
