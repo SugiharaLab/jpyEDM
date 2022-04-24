@@ -62,6 +62,14 @@ outputTab.set_title( 1, 'Output'  )
 outputTab.set_title( 2, '2D Plot' )
 outputTab.set_title( 3, '3D Plot' )
 
+version = "Version 0.1 2022-04-24"
+
+#============================================================================
+def Version():
+    with dfOutput :
+        versionString = version + "  pyEDM: " + pyEDM.__version__
+        display( print( versionString ) )
+
 #============================================================================
 def RunButtonClicked( b ):
     '''Call the wrapper interface to pyEDM for the specified method'''
@@ -319,13 +327,16 @@ def Dashboard():
     knn = widgets.IntSlider( value=0, min=0, max=50, step=1,
                              description='knn' )
     
-    E = widgets.IntSlider( value=3, min=0, max=15, step=1, description='E' )
+    E = widgets.IntSlider( value=3, min=0, max=30, step=1, description='E' )
     
     maxE = widgets.IntText( value=10, description='maxE' )
     
     Tp = widgets.IntSlider( value=1, min=0, max=30, step=1, description='Tp' )
     
     maxTp = widgets.IntText( value=10, description='maxTp' )
+    
+    exclusionRadius = widgets.IntSlider( value=0, min=0, max=30, step=1,
+                                         description='exclRad')
     
     theta = widgets.FloatText( value=3, description='theta',
                                layout = widgets.Layout(width='50%') )
@@ -425,6 +436,7 @@ def Dashboard():
     Widgets['knn']            = knn
     Widgets['Tp']             = Tp
     Widgets['maxTp']          = maxTp
+    Widgets['exclusionRadius']= exclusionRadius
     Widgets['theta']          = theta
     Widgets['thetas']         = thetas
     Widgets['alpha']          = alpha
@@ -458,6 +470,7 @@ def Dashboard():
     RefreshData()
 
     DataDashboard() # Default start up
+    Version()
 
 #============================================================================
 def UpdateArgs():
@@ -476,6 +489,7 @@ def UpdateArgs():
     args.knn             = Widgets['knn'].value
     args.Tp              = Widgets['Tp'].value
     args.maxTp           = Widgets['maxTp'].value
+    args.exclusionRadius = Widgets['exclusionRadius'].value
     args.theta           = Widgets['theta'].value
     args.thetas          = Widgets['thetas'].value
     args.tau             = Widgets['tau'].value
@@ -608,6 +622,7 @@ def MultiviewDashboard():
     
     mid_box   = widgets.VBox( [ Widgets['E'],  Widgets['knn'],
                                 Widgets['Tp'], Widgets['tau'],
+                                Widgets['exclusionRadius'],
                                 Widgets['D'],  Widgets['multiview'] ] )
     
     right_box = widgets.VBox( [ Widgets['fileImport'], Widgets['outputFile'],
@@ -628,7 +643,8 @@ def CCMDashboard():
                                 Widgets['libsize'], Widgets['seed'] ] )
     
     mid_box   = widgets.VBox( [ Widgets['E'],   Widgets['knn'], Widgets['Tp'],
-                                Widgets['tau'], Widgets['subsample'] ] )
+                                Widgets['tau'], Widgets['exclusionRadius'],
+                                Widgets['subsample'] ] )
     
     right_box = widgets.VBox( [ Widgets['fileImport'], Widgets['outputFile'],
                                 widgets.VBox( [
@@ -652,6 +668,7 @@ def SMapDashboard():
     
     mid_box   = widgets.VBox( [ Widgets['theta'], Widgets['E'], Widgets['Tp'],
                                 Widgets['tau'],   Widgets['knn'],
+                                Widgets['exclusionRadius'],
                                 Widgets['CE'],    Widgets['generateSteps'] ] )
     
     right_box = widgets.VBox( [ Widgets['fileImport'], Widgets['outputFile'],
@@ -671,6 +688,7 @@ def SimplexDashboard():
     
     mid_box   = widgets.VBox( [ Widgets['E'],   Widgets['Tp'],
                                 Widgets['tau'], Widgets['knn'],
+                                Widgets['exclusionRadius'],
                                 Widgets['CE'],  Widgets['generateSteps'] ] )
     
     right_box = widgets.VBox( [ Widgets['fileImport'], Widgets['outputFile'],
