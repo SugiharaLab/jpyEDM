@@ -48,7 +48,7 @@ Widgets = OrderedDict() # Dictionary of arg names and widgets
 
 dataFrameIn  = None # Pandas DataFrame input
 dataFrameOut = None # Output from pyEDM
-validLib     = []   # Simplex & SMap CE
+validLib     = []   # Simplex, SMap, Eval functions CE
 SMapSolver   = None # SMap
 
 dfInput      = widgets.Output()
@@ -81,10 +81,12 @@ def RunButtonClicked( b ):
 
     Widgets['running'].value = True # Display checkbox for busy EDM
     sleep( 0.05 ) # Let the running widget update before calls/threads
-    
+
     method = Widgets['method'].value # Simplex SMap CCM...
 
-    if len( args.CE ) and ( 'Simplex' in method or 'SMap' in method ) :
+    if len( args.CE ) and \
+       method in ['Simplex', 'SMap', 'Embed Dimension',
+                  'Predict Interval', 'Predict Nonlinear'] :
         validLib = dataFrameIn.eval( args.CE )
     else :
         validLib = []
@@ -112,19 +114,19 @@ def RunButtonClicked( b ):
             with dfOutput:
                 display( print( "Invalid method" ) )
 
-    except (RuntimeError, OSError, Warning) as error:
+    except ( RuntimeError, OSError, Warning ) as error:
         dfOutput.clear_output()
         with dfOutput :
             display( print( error ) )
         Plot2DOutput.clear_output()
         with Plot2DOutput :
             display( print( error ) )
-        Plot2DOutput.clear_output()
-        with Plot2DOutput :
+        Plot3DOutput.clear_output()
+        with Plot3DOutput :
             display( print( error ) )
-        
+
     Widgets['running'].value = False
-    
+
 #============================================================================
 def onMethodChange( change ):
     '''Refresh dashboard according to method Dropdown widget value'''
@@ -133,7 +135,7 @@ def onMethodChange( change ):
     clearDashboard()
     dfOutput.clear_output()    
     UpdateArgs()
-    
+
     if 'Simplex' in newMethod :
         SimplexDashboard()
     elif 'SMap' in newMethod :
@@ -159,15 +161,15 @@ def onMethodChange( change ):
 def onSolverChange( change ):
     '''Call NewSolver'''
     NewSolver( change['new'] ) # Solver name in change['new']
-    
+
 def onAlphaChange( change ):
     '''Call NewSolver'''
     NewSolver( Widgets['solver'].value ) # alpha float in change['new']
-    
+
 def onL1_ratioChange( change ):
     '''Call NewSolver'''  
     NewSolver( Widgets['solver'].value ) # l1_ratio text in change['new']
-  
+
 #============================================================================
 def NewSolver( newSolver ):
     '''Instantiate sklearn solver based on solver and parameters'''
@@ -179,7 +181,7 @@ def NewSolver( newSolver ):
         with dfOutput:
             display( print( "sklearn module not imported, using SVD solver." ) )
         return
-    
+
     UpdateArgs()
 
     alpha = Widgets['alpha'].value # FloatText widget
@@ -191,7 +193,7 @@ def NewSolver( newSolver ):
     #     Need to generalize alpha to Text/vector?
     if len( l1_ratio ) == 1 :
         l1_ratio = l1_ratio[0]
-    
+
     if 'SVD' in newSolver :
         SMapSolver = None
     elif 'Ridge CV' in newSolver :
@@ -212,16 +214,16 @@ def NewSolver( newSolver ):
 #============================================================================
 def DataPlotButtonClicked( b = None ):
     '''Explicitly call Data or Embed Plots'''
-    
+
     pltClose() # Jupyter calls plt.show, but not close?
-    
+
     columnList = Widgets['plotSelect'].value
 
     if len( columnList ) == 2 :
         Plot2DOutput.clear_output()
         with Plot2DOutput :
             display( dataFrameIn.plot( columnList[0], columnList[1] ) )
-            
+
     elif len( columnList ) == 3 :
         Plot3DOutput.clear_output()
         with Plot3DOutput :
@@ -238,18 +240,18 @@ def onFileImportChange( b = None ):
     fileNamekey    = list( fileUploadDict.keys() )[0]
     content        = fileUploadDict[ fileNamekey ][ 'content' ]
     dataFrameIn    = read_csv( BytesIO( content ) )
-    
+
     UpdateArgs()
     RefreshData()
 
     # Crazy hack to reset the FileUpload widget counter
     Widgets['fileImport']._counter = 0
-   
+
 #============================================================================
 def ImportButtonClicked( b ):
     '''dataFrameIn assigned externally'''
     RefreshData()
-    
+
 #============================================================================
 def RefreshData():
     '''Update parameters for onFileImportChange(), or,
@@ -269,13 +271,13 @@ def RefreshData():
         Widgets[ 'lib'        ].max     = dataFrameIn.shape[0]
         Widgets[ 'columns'    ].options = dataFrameIn.columns[1:]
         Widgets[ 'target'     ].options = dataFrameIn.columns[1:]
-        
+
         UpdateArgs()
 
 #============================================================================
 def Dashboard():
     '''Create notebook widgets to hold args parameters'''
-    
+
     runButton = widgets.Button( description = "Run" )
     runButton.on_click( RunButtonClicked )
 
@@ -284,7 +286,7 @@ def Dashboard():
 
     dataPlotButton = widgets.Button( description = "Plot" )
     dataPlotButton.on_click( DataPlotButtonClicked )
-    
+
     method = widgets.Dropdown( options=[ 'Simplex',
                                          'SMap',
                                          'CCM',
@@ -295,10 +297,10 @@ def Dashboard():
                                          'Embed',
                                          'Data' ],
                                value='Data', description='method' )
-    
+
     # Callback function on method Dropdown to change dashboard
     method.observe( onMethodChange, names = 'value' )
-    
+
     solver = widgets.Dropdown( options=[ 'SVD',
                                          'Ridge',
                                          'Lasso',
@@ -307,48 +309,48 @@ def Dashboard():
                                          'Lasso CV',
                                          'Elastic Net CV' ],
                                value='SVD', description='solver' )
-    
+
     # Callback function on solver Dropdown to instantiate solver
     solver.observe( onSolverChange, names = 'value' )
-    
+
     lib = widgets.IntRangeSlider( value=[1,500], min=1, max=1000, step=1,
                                   description='lib' )
 
     pred = widgets.IntRangeSlider( value=[501,600], min=1, max=1000, step=1,
                                    description='pred' )
-    
+
     columns = widgets.SelectMultiple( description='columns', rows = 3 )
-    
+
     target = widgets.Dropdown( options=[], description='target' )
-    
+
     tau = widgets.IntSlider( value=-1, min=-20, max=20, step=1,
                              description='tau')
-    
+
     knn = widgets.IntSlider( value=0, min=0, max=50, step=1,
                              description='knn' )
-    
+
     E = widgets.IntSlider( value=3, min=0, max=30, step=1, description='E' )
-    
+
     maxE = widgets.IntText( value=10, description='maxE' )
-    
+
     Tp = widgets.IntSlider( value=1, min=0, max=30, step=1, description='Tp' )
-    
+
     maxTp = widgets.IntText( value=10, description='maxTp' )
-    
+
     exclusionRadius = widgets.IntSlider( value=0, min=0, max=30, step=1,
                                          description='exclRad')
-    
+
     theta = widgets.FloatText( value=3, description='theta',
                                layout = widgets.Layout(width='50%') )
-    
+
     thetas = widgets.Text( value=args.thetas, description='thetas',
                            layout = widgets.Layout(width='100%') )
-    
+
     alpha = widgets.FloatText( value=0.05, description='alpha',
                                layout = widgets.Layout(width='50%') )
     # Callback function on alpha to instantiate solver
     alpha.observe( onAlphaChange, names = 'value' )
-    
+
     l1_ratio = widgets.Text( value='0.05', description='l1_ratio',
                              layout = widgets.Layout(width='90%') )
     # Callback function on l1_ratio to instantiate solver
@@ -356,28 +358,28 @@ def Dashboard():
     
     generateSteps = widgets.IntText( value=0, description='generate',
                                      layout = widgets.Layout(width='50%') )
-    
+
     CE = widgets.Text( value='', description='CE' )
-    
+
     D = widgets.IntSlider( value=0, min=0, max=15, step=1, description='D' )
-    
+
     multiview = widgets.IntSlider( value=0, min=0, max=20, step=1,
                                    description='multiview')
-    
+
     libsize = widgets.Text( value='20 200 20', description='libsize')
-    
+
     subsample = widgets.IntSlider( value=100, min=10, max=200, step=1,
                                    description='subsample' )
-    
+
     seed = widgets.IntText( value=None, description='seed' )
-    
+
     nThreads = widgets.IntText( value=4, description='nThreads' )
-    
+
     outputFile = widgets.Text( value='', description='Prediction file')
-    
+
     outputSmapFile = widgets.Text( value='', description='S-Map Output',
                                    style = {'description_width' : 'initial'} )
-    
+
     outputEmbed = widgets.Text( value='', description='Embed Output',
                                 indent = False, 
                                 style = {'description_width' : 'initial'} )
@@ -396,23 +398,23 @@ def Dashboard():
     randomLib = widgets.Checkbox( value=True, description='randomLib',
                                   indent = False, 
                                   layout = widgets.Layout(width='60%') )
-    
+
     trainLib = widgets.Checkbox( value=True, description='trainLib',
                                  indent = False, 
                                  layout = widgets.Layout(width='60%') )
-    
+
     embedded = widgets.Checkbox( value=False, description='embedded',
                                  indent = False, 
                                  layout = widgets.Layout(width='60%') )
-    
+
     replacement = widgets.Checkbox( value=False, description='replacement',
                                     indent = False, 
                                     layout = widgets.Layout(width='60%') )
-    
+
     excludeTarget = widgets.Checkbox( value=False, description='excludeTarget',
                                       indent = False, 
                                       layout = widgets.Layout(width='60%') )
-    
+
     running = widgets.Checkbox( value=False, description='Running',
                                 indent = False, 
                                 layout = widgets.Layout(width='60%') )
@@ -519,18 +521,18 @@ def UpdateArgs():
 #============================================================================
 def RenderDashboard( left_box, mid_box, right_box ):
     '''Display dashboard with consistent layout'''
-    
+
     controlWidgets  = widgets.HBox([ Widgets['runButton'], Widgets['running'] ])
     argumentWidgets = widgets.HBox( [ left_box, mid_box, right_box ] )
     dashboard = widgets.VBox( [ argumentWidgets, controlWidgets, outputTab ] )
     display( dashboard )
-    
+
 #============================================================================
 def DataDashboard():
     '''Select Data widgets'''
 
     Widgets[ 'plotSelect' ].options = dataFrameIn.columns
-    
+
     # Organize widgets 
     left_box  = widgets.VBox( [ Widgets['method'], Widgets['dataPlotButton'] ] )
     
@@ -538,7 +540,7 @@ def DataDashboard():
     
     right_box = widgets.VBox( [ widgets.HBox( [ Widgets['fileImport'],
                                                 Widgets['importButton'] ] ) ] )
-    
+
     RenderDashboard( left_box, mid_box, right_box )
 
 #============================================================================
@@ -547,13 +549,13 @@ def EmbedDashboard():
 
     # Organize widgets 
     left_box  = widgets.VBox( [ Widgets['method'], Widgets['columns'] ] )
-    
+
     mid_box   = widgets.VBox( [ Widgets['E'], Widgets['tau'],
                                 Widgets['plotSelect'] ] )
-    
+
     right_box = widgets.VBox( [ Widgets['fileImport'], # Widgets['outputEmbed'],
                                 widgets.HBox( [ Widgets['plot'] ] ) ] )
-    
+
     RenderDashboard( left_box, mid_box, right_box )
 
 #============================================================================
@@ -564,15 +566,16 @@ def PredictNonlinearDashboard():
     left_box  = widgets.VBox( [ Widgets['method'],
                                 Widgets['lib'],     Widgets['pred'],
                                 Widgets['columns'], Widgets['target'] ] )
-    
+
     mid_box   = widgets.VBox( [ Widgets['E'],   Widgets['Tp'], 
-                                Widgets['tau'], Widgets['thetas'] ] )
-    
+                                Widgets['tau'], Widgets['thetas'],
+                                Widgets['exclusionRadius'], Widgets['CE'] ] )
+
     right_box = widgets.VBox( [ Widgets['fileImport'], Widgets['outputFile'],
                                 Widgets['nThreads'],
                                 widgets.HBox( [ Widgets['plot'],
                                                 Widgets['embedded'] ] ) ] )
-    
+
     RenderDashboard( left_box, mid_box, right_box )
 
 #============================================================================
@@ -583,15 +586,16 @@ def PredictIntervalDashboard():
     left_box  = widgets.VBox( [ Widgets['method'],
                                 Widgets['lib'],     Widgets['pred'],
                                 Widgets['columns'], Widgets['target'] ] )
-    
+
     mid_box   = widgets.VBox( [ Widgets['maxTp'],
-                                Widgets['E'], Widgets['tau'] ] )
-    
+                                Widgets['E'], Widgets['tau'],
+                                Widgets['exclusionRadius'], Widgets['CE'] ] )
+
     right_box = widgets.VBox( [ Widgets['fileImport'], Widgets['outputFile'],
                                 Widgets['nThreads'],
                                 widgets.HBox( [ Widgets['plot'],
                                                 Widgets['embedded'] ] ) ] )
-    
+
     RenderDashboard( left_box, mid_box, right_box )
 
 #============================================================================
@@ -602,13 +606,14 @@ def EmbedDimensionDashboard():
     left_box  = widgets.VBox( [ Widgets['method'],
                                 Widgets['lib'],     Widgets['pred'],
                                 Widgets['columns'], Widgets['target'] ] )
-    
+
     mid_box   = widgets.VBox( [ Widgets['maxE'],
-                                Widgets['Tp'],  Widgets['tau'] ] )
-    
+                                Widgets['Tp'],  Widgets['tau'],
+                                Widgets['exclusionRadius'], Widgets['CE'] ] )
+
     right_box = widgets.VBox( [ Widgets['fileImport'], Widgets['outputFile'],
                                 Widgets['nThreads'],   Widgets['plot'] ] )
-    
+
     RenderDashboard( left_box, mid_box, right_box )
 
 #============================================================================
@@ -619,20 +624,20 @@ def MultiviewDashboard():
     left_box  = widgets.VBox( [ Widgets['method'],
                                 Widgets['lib'],     Widgets['pred'],
                                 Widgets['columns'], Widgets['target'] ] )
-    
+
     mid_box   = widgets.VBox( [ Widgets['E'],  Widgets['knn'],
                                 Widgets['Tp'], Widgets['tau'],
                                 Widgets['exclusionRadius'],
                                 Widgets['D'],  Widgets['multiview'] ] )
-    
+
     right_box = widgets.VBox( [ Widgets['fileImport'], Widgets['outputFile'],
                                 Widgets['nThreads'],
                                 widgets.VBox( [ Widgets['plot'],
                                                 Widgets['trainLib'],
                                                 Widgets['excludeTarget'] ])])
-    
+
     RenderDashboard( left_box, mid_box, right_box )
-    
+
 #============================================================================
 def CCMDashboard():
     '''Select CCM widgets'''
@@ -641,18 +646,18 @@ def CCMDashboard():
     left_box  = widgets.VBox( [ Widgets['method'],
                                 Widgets['columns'], Widgets['target'],
                                 Widgets['libsize'], Widgets['seed'] ] )
-    
+
     mid_box   = widgets.VBox( [ Widgets['E'],   Widgets['knn'], Widgets['Tp'],
                                 Widgets['tau'], Widgets['exclusionRadius'],
                                 Widgets['subsample'] ] )
-    
+
     right_box = widgets.VBox( [ Widgets['fileImport'], Widgets['outputFile'],
                                 widgets.VBox( [
                                     widgets.HBox( [ Widgets['plot'] ] ),
                                     widgets.HBox( [ Widgets['randomLib'],
                                                     Widgets['replacement'] ] )
                                 ] ) ] )
-    
+
     RenderDashboard( left_box, mid_box, right_box )
 
 #============================================================================
@@ -665,16 +670,16 @@ def SMapDashboard():
                                 Widgets['columns'], Widgets['target'],
                                 Widgets['solver'],  Widgets['alpha'],
                                 Widgets['l1_ratio'] ] )
-    
+
     mid_box   = widgets.VBox( [ Widgets['theta'], Widgets['E'], Widgets['Tp'],
                                 Widgets['tau'],   Widgets['knn'],
                                 Widgets['exclusionRadius'],
                                 Widgets['CE'],    Widgets['generateSteps'] ] )
-    
+
     right_box = widgets.VBox( [ Widgets['fileImport'], Widgets['outputFile'],
                                 widgets.HBox( [ Widgets['plot'],
                                                 Widgets['embedded'] ] ) ] )
-    
+
     RenderDashboard( left_box, mid_box, right_box )
 
 #============================================================================
@@ -685,16 +690,16 @@ def SimplexDashboard():
     left_box  = widgets.VBox( [ Widgets['method'],
                                 Widgets['lib'],     Widgets['pred'],
                                 Widgets['columns'], Widgets['target'] ] )
-    
+
     mid_box   = widgets.VBox( [ Widgets['E'],   Widgets['Tp'],
                                 Widgets['tau'], Widgets['knn'],
                                 Widgets['exclusionRadius'],
                                 Widgets['CE'],  Widgets['generateSteps'] ] )
-    
+
     right_box = widgets.VBox( [ Widgets['fileImport'], Widgets['outputFile'],
                                 widgets.HBox( [ Widgets['plot'],
                                                 Widgets['embedded'] ] ) ] )
-    
+
     RenderDashboard( left_box, mid_box, right_box )
 
 #============================================================================
@@ -704,7 +709,7 @@ def ViewData():
     dfInput.clear_output()
     with dfInput :
         display( dataFrameIn )
-    
+
     if args.plot :
         DataPlotButtonClicked()
 
@@ -719,24 +724,24 @@ def Embed_():
                tau       = args.tau,
                columns   = args.columns,
                verbose   = args.verbose )
-    
+
     Widgets[ 'plotSelect' ].options = D.columns
     columnList = Widgets['plotSelect'].value
-    
+
     dfOutput.clear_output()
     with dfOutput :
         display( D )
-        
+
     if args.plot :
         pltClose() # WTH? Jupyter calls plt.show, but not close?
-    
+
         columnList = Widgets['plotSelect'].value
 
         if len( columnList ) == 2 :
             Plot2DOutput.clear_output()
             with Plot2DOutput :
                 display( D.plot( columnList[0], columnList[1] ) )
-            
+
         elif len( columnList ) == 3 :
             Plot3DOutput.clear_output()
             with Plot3DOutput :
@@ -747,7 +752,7 @@ def Embed_():
 #============================================================================
 def EmbedDimension_():
     '''Interface for EmbedDimension()'''
-    
+
     D = EmbedDimension( pathIn      = '', # args.path,
                         dataFile    = '', # args.inputFile,
                         dataFrame   = dataFrameIn,
@@ -758,17 +763,19 @@ def EmbedDimension_():
                         maxE        = args.maxE,
                         Tp          = args.Tp,
                         tau         = args.tau,
+                        exclusionRadius = args.exclusionRadius,
                         columns     = args.columns,
                         target      = args.target,
                         embedded    = args.embedded,
                         verbose     = args.verbose,
+                        validLib    = validLib,
                         numThreads  = args.nThreads,
                         showPlot    = False )
-    
+
     dfOutput.clear_output()
     with dfOutput :
         display( D )
-        
+
     if args.plot :
         pltClose()
         Plot2DOutput.clear_output()
@@ -791,17 +798,19 @@ def PredictInterval_():
                          maxTp       = args.maxTp,
                          E           = args.E,
                          tau         = args.tau,
+                         exclusionRadius = args.exclusionRadius,
                          columns     = args.columns,
                          target      = args.target,
                          embedded    = args.embedded,
                          verbose     = args.verbose,
+                         validLib    = validLib,
                          numThreads  = args.nThreads,
                          showPlot    = False )
-    
+
     dfOutput.clear_output()
     with dfOutput :
         display( D )
-        
+
     if args.plot :
         pltClose()
         Plot2DOutput.clear_output()
@@ -826,17 +835,19 @@ def PredictNonlinear_():
                           Tp          = args.Tp,
                           knn         = args.knn,
                           tau         = args.tau,
+                          exclusionRadius = args.exclusionRadius,
                           columns     = args.columns,
                           target      = args.target,
                           embedded    = args.embedded,
                           verbose     = args.verbose,
+                          validLib    = validLib,
                           numThreads  = args.nThreads,
                           showPlot    = False )
-    
+
     dfOutput.clear_output()
     with dfOutput :
         display( D )
-        
+
     if args.plot :
         pltClose()
         Plot2DOutput.clear_output()
@@ -876,11 +887,11 @@ def Multiview_():
                    parameterList   = False,
                    verbose         = args.verbose,
                    numThreads      = args.nThreads )
-    
+
     dfOutput.clear_output()
     with dfOutput :
         display( D[ 'View' ] )
-        
+
     if args.plot :
         pltClose()
         Plot2DOutput.clear_output()
@@ -918,11 +929,11 @@ def CCM_():
              includeData     = args.includeData,
              parameterList   = False,
              verbose         = args.verbose )
-    
+
     dfOutput.clear_output()
     with dfOutput :
         display( D )
-        
+
     if args.plot :
         pltClose()
         Plot2DOutput.clear_output()
@@ -959,11 +970,11 @@ def SMap_():
               validLib        = validLib,
               generateSteps   = args.generateSteps,
               parameterList   = False )
-    
+
     dfOutput.clear_output()
     with dfOutput :
         display( D['predictions' ] )
-        
+
     if args.plot :
         pltClose()
         Plot2DOutput.clear_output()
@@ -1001,7 +1012,7 @@ def Simplex_():
     dfOutput.clear_output()
     with dfOutput :
         display( D )
-        
+
     if args.plot :
         pltClose()
         Plot2DOutput.clear_output()
@@ -1014,7 +1025,7 @@ def Simplex_():
 def ReadCSV( filepath = None ):
     '''Interface for read_csv() in pandas'''
     df = DataFrame()
-    
+
     try:
         if filepath == None :
             UpdateArgs()
@@ -1027,12 +1038,15 @@ def ReadCSV( filepath = None ):
             # jpyEDM Always passes a DataFrame, not the path/file to pyEDM/cppEDM
             # Try to handle DateTime in first column...
             # df.iloc[:,0] = df.iloc[:,0].apply(lambda x: to_datetime(x).value)
-    
-    except (OSError, RuntimeError, ValueError) as error:
+
+    except ( OSError, RuntimeError, ValueError ) as error:
+        dfInput.clear_output()
+        with dfInput :
+            display( print( error ) )
         dfOutput.clear_output()
         with dfOutput :
             display( print( error ) )
-            
+
     return df
 
 #============================================================================
