@@ -32,6 +32,7 @@ else:
 
 # Local modules
 from src.ArgParse        import ParseCmdLine
+from src.MI_tau          import MI_tau
 from src.PlotFunctions   import *
 
 # JP: OO class implementation would allow separation across files
@@ -62,7 +63,7 @@ outputTab.set_title( 1, 'Output'  )
 outputTab.set_title( 2, '2D Plot' )
 outputTab.set_title( 3, '3D Plot' )
 
-version = "Version 0.1 2022-04-24"
+version = "Version 0.2 2022-05-15"
 
 #============================================================================
 def Version():
@@ -108,6 +109,8 @@ def RunButtonClicked( b ):
             dataFrameOut = PredictNonlinear_()
         elif 'Embed' in method :
             dataFrameOut = Embed_()
+        elif 'Mutual Information' in method :
+            dataFrameOut = MutualInfo()
         elif 'Data' in method :
             ViewData()
         else :
@@ -154,6 +157,8 @@ def onMethodChange( change ):
         EmbedDashboard()
     elif 'Data' in newMethod :
         DataDashboard()
+    elif 'Mutual Information' in newMethod :
+        MutualInfoDashboard()
     else :
         DataDashboard()
 
@@ -295,6 +300,7 @@ def Dashboard():
                                          'Predict Interval',
                                          'Predict Nonlinear',
                                          'Embed',
+                                         'Mutual Information',
                                          'Data' ],
                                value='Data', description='method' )
 
@@ -323,21 +329,23 @@ def Dashboard():
 
     target = widgets.Dropdown( options=[], description='target' )
 
-    tau = widgets.IntSlider( value=-1, min=-20, max=20, step=1,
+    tau = widgets.IntSlider( value=-1, min=-100, max=100, step=1,
                              description='tau')
 
     knn = widgets.IntSlider( value=0, min=0, max=50, step=1,
                              description='knn' )
 
-    E = widgets.IntSlider( value=3, min=0, max=30, step=1, description='E' )
+    E = widgets.IntSlider( value=3, min=0, max=50, step=1, description='E' )
 
-    maxE = widgets.IntText( value=10, description='maxE' )
+    maxE = widgets.IntSlider( value=10, min=5, max=50, step=1,
+                              description='maxE' )
 
-    Tp = widgets.IntSlider( value=1, min=0, max=30, step=1, description='Tp' )
+    Tp = widgets.IntSlider( value=1, min=0, max=50, step=1, description='Tp' )
 
-    maxTp = widgets.IntText( value=10, description='maxTp' )
+    maxTp = widgets.IntSlider( value=10, min=5, max=50, step=1,
+                               description='maxTp' )
 
-    exclusionRadius = widgets.IntSlider( value=0, min=0, max=30, step=1,
+    exclusionRadius = widgets.IntSlider( value=0, min=0, max=100, step=1,
                                          description='exclRad')
 
     theta = widgets.FloatText( value=3, description='theta',
@@ -364,14 +372,20 @@ def Dashboard():
     D = widgets.IntSlider( value=0, min=0, max=15, step=1, description='D' )
 
     multiview = widgets.IntSlider( value=0, min=0, max=20, step=1,
-                                   description='multiview')
+                                   description='multiview' )
 
     libsize = widgets.Text( value='20 200 20', description='libsize')
 
-    subsample = widgets.IntSlider( value=100, min=10, max=200, step=1,
+    subsample = widgets.IntSlider( value=100, min=5, max=200, step=1,
                                    description='subsample' )
 
     seed = widgets.IntText( value=None, description='seed' )
+
+    maxLag = widgets.IntSlider( value=15, min=0, max=50, step=1,
+                                description='maxLag' )
+
+    MI_neighbors = widgets.IntSlider( value=10, min=2, max=100, step=1,
+                                      description='MI_neighbors' )
 
     nThreads = widgets.IntText( value=4, description='nThreads' )
 
@@ -457,6 +471,8 @@ def Dashboard():
     Widgets['randomLib']      = randomLib
     Widgets['replacement']    = replacement
     Widgets['seed']           = seed
+    Widgets['maxLag']         = maxLag
+    Widgets['MI_neighbors']   = MI_neighbors
     Widgets['nThreads']       = nThreads
     Widgets['outputFile']     = outputFile
     Widgets['outputSmapFile'] = outputSmapFile
@@ -501,7 +517,11 @@ def UpdateArgs():
     args.trainLib        = Widgets['trainLib'].value
     args.excludeTarget   = Widgets['excludeTarget'].value
     args.embedded        = Widgets['embedded'].value
+
     args.generateSteps   = Widgets['generateSteps'].value
+    if args.generateSteps < 0 :
+        args.generateSteps = Widgets['generateSteps'].value = 0
+
     args.CE              = Widgets['CE'].value
     #args.libSize        = [ int(x) for x in Widgets['libsize'].value.split() ]
     args.libSize         = Widgets['libsize'].value
@@ -509,7 +529,13 @@ def UpdateArgs():
     args.random          = Widgets['randomLib'].value
     args.replacement     = Widgets['replacement'].value
     args.seed            = Widgets['seed'].value
+    args.maxLag          = Widgets['maxLag'].value
+    args.MI_neighbors    = Widgets['MI_neighbors'].value
+
     args.nThreads        = Widgets['nThreads'].value
+    if args.nThreads < 1 :
+        args.nThreads = Widgets['nThreads'].value = 1
+
     args.inputFile       = '' # fileImport directly assigns dataFrameIn
     args.outputFile      = Widgets['outputFile'].value
     args.outputSmapFile  = Widgets['outputSmapFile'].value
@@ -540,6 +566,22 @@ def DataDashboard():
     
     right_box = widgets.VBox( [ widgets.HBox( [ Widgets['fileImport'],
                                                 Widgets['importButton'] ] ) ] )
+
+    RenderDashboard( left_box, mid_box, right_box )
+
+#============================================================================
+def MutualInfoDashboard():
+    '''Select Mutual Info widgets'''
+
+    # Organize widgets
+    left_box  = widgets.VBox( [ Widgets['method'],
+                                Widgets['columns'], Widgets['target'] ] )
+
+    mid_box   = widgets.VBox( [ Widgets['maxLag'],
+                                Widgets['tau'], Widgets['MI_neighbors'] ] )
+
+    right_box = widgets.VBox( [ Widgets['fileImport'],
+                                widgets.HBox( [ Widgets['plot'] ] ) ] )
 
     RenderDashboard( left_box, mid_box, right_box )
 
@@ -712,6 +754,23 @@ def ViewData():
 
     if args.plot :
         DataPlotButtonClicked()
+
+#============================================================================
+def MutualInfo():
+    '''Mutual Information on lagged columns : target'''
+    D = MI_tau( args, dataFrameIn )
+
+    dfOutput.clear_output()
+    with dfOutput :
+        display( D )
+
+    if args.plot :
+        pltClose()
+        Plot2DOutput.clear_output()
+        with Plot2DOutput :
+            display( PlotMutualInfo( D, args ) )
+
+    return D
 
 #============================================================================
 def Embed_():

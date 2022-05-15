@@ -1,6 +1,11 @@
+# Python distribution modules
+from math import sqrt, ceil
+
+# Community modules
 import matplotlib.pyplot    as     plt
 from   matplotlib.pyplot    import axhline
 from   mpl_toolkits.mplot3d import axes3d
+from   numpy                import arange
 from   pyEDM                import ComputeError
 
 #----------------------------------------------------------------------------
@@ -72,7 +77,7 @@ def PlotCCM( libMeans, args ):
     ax = libMeans.plot( 'LibSize',
                         [ libMeans.columns[1], libMeans.columns[2] ],
                         title = title, linewidth = 3 )
-    ax.set( xlabel = "Library Size", ylabel = "Correlation ρ" )
+    ax.set( xlabel = "Library Size", ylabel = "Cross Map ρ" )
     axhline( y = 0, linewidth = 1 )
 
 #----------------------------------------------------------------------------
@@ -114,3 +119,47 @@ def PlotCoeff_( df, args ):
 
     df.plot( time_col, coef_cols, title = title, linewidth = 3,
              subplots = True )
+
+#----------------------------------------------------------------------------
+#
+#----------------------------------------------------------------------------
+def PlotMutualInfo( df, args ):
+
+    colNames = df.columns # lag, MI[v1:v2]..., CC[v1:v2]
+    lags     = df.loc[ :,'lag' ]
+
+    numVars  = len( args.columns )
+    nRowCol  = ceil( sqrt( numVars ) )
+
+    # If numVars > 1, create a square matrix subplot
+    fig, axs = plt.subplots( nRowCol, nRowCol )
+
+    title = 'Mutual Info & Correlation  nn:' + str( args.MI_neighbors )
+    fig.suptitle( title )
+
+    if numVars == 1 :
+        axs.plot( lags, df.iloc[ :, 1 ], label = 'MI' )
+        axs.plot( lags, df.iloc[ :, 2 ], label = 'CC' )
+        axs.legend()
+        axs.set_title( args.columns[ 0 ] + ":" + args.target, y = 0 )
+    else:
+        MI_cols = range( 1, numVars + 1 )
+        CC_cols = range( numVars + 1, 2 * numVars + 1 )
+        k = 0
+        for i in range( nRowCol ) :
+            if k >= numVars :
+                break
+
+            for j in range( nRowCol ) :
+                ax = axs[i,j]
+                ax.plot( lags, df.loc[ :, colNames[MI_cols[k]] ], label='MI' )
+                ax.plot( lags, df.loc[ :, colNames[CC_cols[k]] ], label='CC' )
+                ax.legend()
+                ax.set_title( args.columns[ k ] + ":" + args.target,y=0 )
+
+                k = k + 1
+
+                if k >= numVars :
+                    break
+
+    plt.show()
