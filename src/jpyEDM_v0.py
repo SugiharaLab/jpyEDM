@@ -63,7 +63,7 @@ outputTab.set_title( 1, 'Output'  )
 outputTab.set_title( 2, '2D Plot' )
 outputTab.set_title( 3, '3D Plot' )
 
-version = "Version 0.2 2022-05-15"
+version = "Version 0.3 2022-05-23"
 
 #============================================================================
 def Version():
@@ -329,7 +329,7 @@ def Dashboard():
 
     target = widgets.Dropdown( options=[], description='target' )
 
-    tau = widgets.IntSlider( value=-1, min=-100, max=100, step=1,
+    tau = widgets.IntSlider( value=-1, min=-50, max=50, step=1,
                              description='tau')
 
     knn = widgets.IntSlider( value=0, min=0, max=50, step=1,
@@ -340,7 +340,7 @@ def Dashboard():
     maxE = widgets.IntSlider( value=10, min=5, max=50, step=1,
                               description='maxE' )
 
-    Tp = widgets.IntSlider( value=1, min=0, max=50, step=1, description='Tp' )
+    Tp = widgets.IntSlider( value=1, min=-50, max=50, step=1, description='Tp' )
 
     maxTp = widgets.IntSlider( value=10, min=5, max=50, step=1,
                                description='maxTp' )
