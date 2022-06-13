@@ -63,7 +63,7 @@ outputTab.set_title( 1, 'Output'  )
 outputTab.set_title( 2, '2D Plot' )
 outputTab.set_title( 3, '3D Plot' )
 
-version = "Version 0.3 2022-05-23"
+version = "Version 0.4 2022-06-13"
 
 #============================================================================
 def Version():

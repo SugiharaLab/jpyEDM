@@ -161,5 +161,3 @@ def PlotMutualInfo( df, args ):
 
                 if k >= numVars :
                     break
-
-    plt.show()
