@@ -7,12 +7,12 @@ from   collections import OrderedDict
 from   time        import sleep
 
 # Community modules
-from   IPython.display      import display
-from   IPython.display      import clear_output as clearDashboard
-import ipywidgets           as     widgets
-from   matplotlib.pyplot    import close as pltClose # Jupyter does not close
-from   pandas               import read_csv, to_datetime
-from   pyEDM                import *
+from   IPython.display   import display
+from   IPython.display   import clear_output as clearDashboard
+import ipywidgets        as     widgets
+from   matplotlib.pyplot import close as pltClose # Jupyter does not close
+from   pandas            import read_csv, to_datetime
+from   pyEDM             import *
 
 from IPython.core.getipython import get_ipython
 
@@ -47,10 +47,12 @@ sys.argv = ['Jupyter pyEDM']
 args    = ParseCmdLine()
 Widgets = OrderedDict() # Dictionary of arg names and widgets
 
-dataFrameIn  = None # Pandas DataFrame input
-dataFrameOut = None # Output from pyEDM
-validLib     = []   # Simplex, SMap, Eval functions CE
-SMapSolver   = None # SMap
+dataFrameIn    = None # Pandas DataFrame input
+dataFrameOut   = None # Output from pyEDM
+validLib       = []   # Simplex, SMap, Eval functions CE
+SMapSolver     = None # SMap
+targetCCMOrder = []   # Order of target selection
+columnCCMOrder = []   # Order of column selection
 
 dfInput      = widgets.Output()
 dfOutput     = widgets.Output()
@@ -63,7 +65,7 @@ outputTab.set_title( 1, 'Output'  )
 outputTab.set_title( 2, '2D Plot' )
 outputTab.set_title( 3, '3D Plot' )
 
-version = "Version 0.4 2022-06-13"
+version = "Version 0.4 2022-06-17"
 
 #============================================================================
 def Version():
@@ -161,6 +163,40 @@ def onMethodChange( change ):
         MutualInfoDashboard()
     else :
         DataDashboard()
+
+#============================================================================
+def onColumnCCMClick( change ):
+    '''Save columnCCM click order into columnCCMOrder'''
+    global columnCCMOrder
+
+    if len( change['new'] ) == 1 :
+        columnCCMOrder = list( change['new'] )
+        return
+
+    for column in change['new']:
+        if column not in columnCCMOrder:
+            columnCCMOrder.append( column )
+
+    for column in columnCCMOrder:
+        if column not in change['new']:
+            columnCCMOrder.remove( column )
+
+#============================================================================
+def onTargetCCMClick( change ):
+    '''Save targetCCM click order into targetCCMOrder'''
+    global targetCCMOrder
+
+    if len( change['new'] ) == 1 :
+        targetCCMOrder = list( change['new'] )
+        return
+
+    for target in change['new']:
+        if target not in targetCCMOrder:
+            targetCCMOrder.append( target )
+
+    for target in targetCCMOrder:
+        if target not in change['new']:
+            targetCCMOrder.remove( target )
 
 #============================================================================
 def onSolverChange( change ):
@@ -276,6 +312,8 @@ def RefreshData():
         Widgets[ 'lib'        ].max     = dataFrameIn.shape[0]
         Widgets[ 'columns'    ].options = dataFrameIn.columns[1:]
         Widgets[ 'target'     ].options = dataFrameIn.columns[1:]
+        Widgets[ 'columnCCM'  ].options = dataFrameIn.columns[1:]
+        Widgets[ 'targetCCM'  ].options = dataFrameIn.columns[1:]
 
         UpdateArgs()
 
@@ -328,6 +366,13 @@ def Dashboard():
     columns = widgets.SelectMultiple( description='columns', rows = 3 )
 
     target = widgets.Dropdown( options=[], description='target' )
+
+    # CCM : preserve click order to help in labeling : 1st click is label
+    columnCCM = widgets.SelectMultiple( description='columns', rows = 3 )
+    targetCCM = widgets.SelectMultiple( description='target',  rows = 3 )
+    # Callback function on targetCCM SelectMultiple to save click order
+    columnCCM.observe( onColumnCCMClick, names = 'value' )
+    targetCCM.observe( onTargetCCMClick, names = 'value' )
 
     tau = widgets.IntSlider( value=-1, min=-50, max=50, step=1,
                              description='tau')
@@ -460,6 +505,8 @@ def Dashboard():
     Widgets['tau']            = tau
     Widgets['columns']        = columns
     Widgets['target']         = target
+    Widgets['columnCCM']      = columnCCM
+    Widgets['targetCCM']      = targetCCM
     Widgets['embedded']       = embedded
     Widgets['generateSteps']  = generateSteps
     Widgets['CE']             = CE
@@ -513,6 +560,8 @@ def UpdateArgs():
     args.tau             = Widgets['tau'].value
     args.columns         = Widgets['columns'].value
     args.target          = Widgets['target'].value
+    args.columnCCM       = Widgets['columnCCM'].value
+    args.targetCCM       = Widgets['targetCCM'].value
     args.multiview       = Widgets['multiview'].value
     args.trainLib        = Widgets['trainLib'].value
     args.excludeTarget   = Widgets['excludeTarget'].value
@@ -581,7 +630,7 @@ def MutualInfoDashboard():
                                 Widgets['tau'], Widgets['MI_neighbors'] ] )
 
     right_box = widgets.VBox( [ Widgets['fileImport'],
-                                widgets.HBox( [ Widgets['plot'] ] ) ] )
+                                Widgets['plot'], Widgets['verbose'] ] )
 
     RenderDashboard( left_box, mid_box, right_box )
 
@@ -596,7 +645,7 @@ def EmbedDashboard():
                                 Widgets['plotSelect'] ] )
 
     right_box = widgets.VBox( [ Widgets['fileImport'], # Widgets['outputEmbed'],
-                                widgets.HBox( [ Widgets['plot'] ] ) ] )
+                                Widgets['plot'], Widgets['verbose'] ] )
 
     RenderDashboard( left_box, mid_box, right_box )
 
@@ -614,9 +663,9 @@ def PredictNonlinearDashboard():
                                 Widgets['exclusionRadius'], Widgets['CE'] ] )
 
     right_box = widgets.VBox( [ Widgets['fileImport'], Widgets['outputFile'],
-                                Widgets['nThreads'],
-                                widgets.HBox( [ Widgets['plot'],
-                                                Widgets['embedded'] ] ) ] )
+                                Widgets['nThreads'],   Widgets['plot'],
+                                Widgets['embedded'] ,
+                                Widgets['verbose'] ] )
 
     RenderDashboard( left_box, mid_box, right_box )
 
@@ -634,9 +683,8 @@ def PredictIntervalDashboard():
                                 Widgets['exclusionRadius'], Widgets['CE'] ] )
 
     right_box = widgets.VBox( [ Widgets['fileImport'], Widgets['outputFile'],
-                                Widgets['nThreads'],
-                                widgets.HBox( [ Widgets['plot'],
-                                                Widgets['embedded'] ] ) ] )
+                                Widgets['nThreads'],   Widgets['plot'],
+                                Widgets['embedded'],   Widgets['verbose'] ] )
 
     RenderDashboard( left_box, mid_box, right_box )
 
@@ -654,7 +702,8 @@ def EmbedDimensionDashboard():
                                 Widgets['exclusionRadius'], Widgets['CE'] ] )
 
     right_box = widgets.VBox( [ Widgets['fileImport'], Widgets['outputFile'],
-                                Widgets['nThreads'],   Widgets['plot'] ] )
+                                Widgets['nThreads'],   Widgets['plot'],
+                                Widgets['verbose'] ] )
 
     RenderDashboard( left_box, mid_box, right_box )
 
@@ -673,10 +722,9 @@ def MultiviewDashboard():
                                 Widgets['D'],  Widgets['multiview'] ] )
 
     right_box = widgets.VBox( [ Widgets['fileImport'], Widgets['outputFile'],
-                                Widgets['nThreads'],
-                                widgets.VBox( [ Widgets['plot'],
-                                                Widgets['trainLib'],
-                                                Widgets['excludeTarget'] ])])
+                                Widgets['nThreads'],   Widgets['plot'],
+                                Widgets['trainLib'],   Widgets['excludeTarget'],
+                                Widgets['verbose'] ] )
 
     RenderDashboard( left_box, mid_box, right_box )
 
@@ -686,19 +734,17 @@ def CCMDashboard():
 
     # Organize widgets 
     left_box  = widgets.VBox( [ Widgets['method'],
-                                Widgets['columns'], Widgets['target'],
+                                Widgets['columnCCM'], Widgets['targetCCM'],
                                 Widgets['libsize'], Widgets['seed'] ] )
 
     mid_box   = widgets.VBox( [ Widgets['E'],   Widgets['knn'], Widgets['Tp'],
                                 Widgets['tau'], Widgets['exclusionRadius'],
                                 Widgets['subsample'] ] )
 
-    right_box = widgets.VBox( [ Widgets['fileImport'], Widgets['outputFile'],
-                                widgets.VBox( [
-                                    widgets.HBox( [ Widgets['plot'] ] ),
-                                    widgets.HBox( [ Widgets['randomLib'],
-                                                    Widgets['replacement'] ] )
-                                ] ) ] )
+    right_box = widgets.VBox( [ Widgets['fileImport'],  Widgets['outputFile'],
+                                Widgets['plot'],        Widgets['embedded'],
+                                Widgets['replacement'], Widgets['randomLib'],
+                                Widgets['verbose'] ] )
 
     RenderDashboard( left_box, mid_box, right_box )
 
@@ -719,8 +765,8 @@ def SMapDashboard():
                                 Widgets['CE'],    Widgets['generateSteps'] ] )
 
     right_box = widgets.VBox( [ Widgets['fileImport'], Widgets['outputFile'],
-                                widgets.HBox( [ Widgets['plot'],
-                                                Widgets['embedded'] ] ) ] )
+                                Widgets['plot'],       Widgets['embedded'],
+                                Widgets['verbose'] ] )
 
     RenderDashboard( left_box, mid_box, right_box )
 
@@ -739,8 +785,8 @@ def SimplexDashboard():
                                 Widgets['CE'],  Widgets['generateSteps'] ] )
 
     right_box = widgets.VBox( [ Widgets['fileImport'], Widgets['outputFile'],
-                                widgets.HBox( [ Widgets['plot'],
-                                                Widgets['embedded'] ] ) ] )
+                                Widgets['plot'],       Widgets['embedded'],
+                                Widgets['verbose'] ] )
 
     RenderDashboard( left_box, mid_box, right_box )
 
@@ -756,11 +802,11 @@ def ViewData():
         DataPlotButtonClicked()
 
 #============================================================================
+@dfOutput.capture() # Decorator
 def MutualInfo():
     '''Mutual Information on lagged columns : target'''
     D = MI_tau( args, dataFrameIn )
 
-    dfOutput.clear_output()
     with dfOutput :
         display( D )
 
@@ -773,6 +819,7 @@ def MutualInfo():
     return D
 
 #============================================================================
+@dfOutput.capture() # Decorator
 def Embed_():
     '''Interface for Embed()'''
 
@@ -787,7 +834,6 @@ def Embed_():
     Widgets[ 'plotSelect' ].options = D.columns
     columnList = Widgets['plotSelect'].value
 
-    dfOutput.clear_output()
     with dfOutput :
         display( D )
 
@@ -809,6 +855,7 @@ def Embed_():
     return D
 
 #============================================================================
+@dfOutput.capture() # Decorator
 def EmbedDimension_():
     '''Interface for EmbedDimension()'''
 
@@ -831,7 +878,6 @@ def EmbedDimension_():
                         numThreads  = args.nThreads,
                         showPlot    = False )
 
-    dfOutput.clear_output()
     with dfOutput :
         display( D )
 
@@ -844,6 +890,7 @@ def EmbedDimension_():
     return D
 
 #============================================================================
+@dfOutput.capture() # Decorator
 def PredictInterval_():
     '''Interface for PredictInterval()'''
 
@@ -866,7 +913,6 @@ def PredictInterval_():
                          numThreads  = args.nThreads,
                          showPlot    = False )
 
-    dfOutput.clear_output()
     with dfOutput :
         display( D )
 
@@ -879,6 +925,7 @@ def PredictInterval_():
     return D
 
 #============================================================================
+@dfOutput.capture() # Decorator
 def PredictNonlinear_():
     '''Interface for PredictNonlinear()'''
 
@@ -903,7 +950,6 @@ def PredictNonlinear_():
                           numThreads  = args.nThreads,
                           showPlot    = False )
 
-    dfOutput.clear_output()
     with dfOutput :
         display( D )
 
@@ -916,10 +962,12 @@ def PredictNonlinear_():
     return D
 
 #============================================================================
+@dfOutput.capture() # Decorator
 def Multiview_():
     '''Interface for Multiview()'''
 
     if args.target not in args.columns :
+        dfOutput.clear_output()
         with dfOutput :
             display( print( "Multiview: Include the target in columns" ) )
             Widgets['running'].value = False
@@ -947,7 +995,6 @@ def Multiview_():
                    verbose         = args.verbose,
                    numThreads      = args.nThreads )
 
-    dfOutput.clear_output()
     with dfOutput :
         display( D[ 'View' ] )
 
@@ -959,14 +1006,9 @@ def Multiview_():
     return D
 
 #============================================================================
+@dfOutput.capture() # Decorator
 def CCM_():
     '''Interface for CCM()'''
-
-    if args.target in args.columns :
-        with dfOutput :
-            display( print( "CCM: Degenerate target and columns" ) )
-            Widgets['running'].value = False
-            return None
 
     D = CCM( pathIn          = '', # args.path,
              dataFile        = '', # args.inputFile,
@@ -978,18 +1020,18 @@ def CCM_():
              knn             = args.knn,
              tau             = args.tau,
              exclusionRadius = args.exclusionRadius,
-             columns         = args.columns,
-             target          = args.target,
+             columns         = columnCCMOrder, # Click order, not args
+             target          = targetCCMOrder, # Click order, not args
              libSizes        = args.libSize,
              sample          = args.subsample,
              random          = args.random,
              replacement     = args.replacement,
              seed            = args.seed,
+             embedded        = args.embedded,
              includeData     = args.includeData,
              parameterList   = False,
              verbose         = args.verbose )
 
-    dfOutput.clear_output()
     with dfOutput :
         display( D )
 
@@ -1002,6 +1044,7 @@ def CCM_():
     return D
 
 #============================================================================
+@dfOutput.capture() # Decorator
 def SMap_():
     '''Interface for SMap()'''
 
@@ -1030,7 +1073,6 @@ def SMap_():
               generateSteps   = args.generateSteps,
               parameterList   = False )
 
-    dfOutput.clear_output()
     with dfOutput :
         display( D['predictions' ] )
 
@@ -1044,6 +1086,7 @@ def SMap_():
     return D
 
 #============================================================================
+@dfOutput.capture() # Decorator
 def Simplex_():
     '''Interface for Simplex()'''
 
@@ -1068,7 +1111,6 @@ def Simplex_():
                  generateSteps   = args.generateSteps,
                  parameterList   = False )
 
-    dfOutput.clear_output()
     with dfOutput :
         display( D )
 
