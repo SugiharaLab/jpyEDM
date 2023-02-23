@@ -273,14 +273,26 @@ def DataPlotButtonClicked( b = None ):
 #============================================================================
 def onFileImportChange( b = None ):
     '''Establish dataFrameIn : Always passed to pyEDM.
-       The FileUpload widget returns a tuple of dicts ? docs seem wrong'''
+
+       Note : 
+       The FileUpload widget value attribute is a tuple with a dictionary 
+       for each uploaded file. The default is multiple = False :
+          FileUpload( accept = ' ',  multiple = False )
+       So only one file will be returned by default in tuple[0].'''
+
     global dataFrameIn
 
     # Crazy unpacking of FileUpload widget return...
-    fileUploadDict = Widgets['fileImport'].value
-    fileNamekey    = list( fileUploadDict.keys() )[0]
-    content        = fileUploadDict[ fileNamekey ][ 'content' ]
-    dataFrameIn    = read_csv( BytesIO( content ) )
+    fileUploadObj = Widgets['fileImport'].value # <class 'tuple'>
+
+    # If fileUploadObj is a dictionary from ipywidgets < 8:
+    if isinstance( fileUploadObj, dict ):
+        fileNamekey = list( fileUploadObj.keys() )[0]
+        content     = fileUploadObj[ fileNamekey ][ 'content' ]
+    else:
+        content = fileUploadObj[0][ 'content' ]
+
+    dataFrameIn = read_csv( BytesIO( content ) )
 
     UpdateArgs()
     RefreshData()
