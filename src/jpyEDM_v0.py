@@ -278,8 +278,13 @@ def onFileImportChange( b = None ):
 
     # Crazy unpacking of FileUpload widget return...
     fileUploadDict = Widgets['fileImport'].value
-    fileNamekey    = list( fileUploadDict.keys() )[0]
-    content        = fileUploadDict[ fileNamekey ][ 'content' ]
+    
+    if isinstance(fileUploadDict, dict):
+        fileNamekey    = list( fileUploadDict.keys() )[0]
+        content        = fileUploadDict[ fileNamekey ][ 'content' ]
+    else:
+        content        = fileUploadDict[0][ 'content' ]
+
     dataFrameIn    = read_csv( BytesIO( content ) )
 
     UpdateArgs()
