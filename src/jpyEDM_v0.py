@@ -65,7 +65,7 @@ outputTab.set_title( 1, 'Output'  )
 outputTab.set_title( 2, '2D Plot' )
 outputTab.set_title( 3, '3D Plot' )
 
-version = "Version 0.4 2022-06-17"
+version = "Version 0.5 2023-05-10"
 
 #============================================================================
 def Version():
@@ -272,9 +272,14 @@ def DataPlotButtonClicked( b = None ):
 
 #============================================================================
 def onFileImportChange( b = None ):
-    '''Establish dataFrameIn : Always passed to pyEDM.
+    '''Import dataFrameIn with FileUpload widget
 
-       Note : 
+       ==================================================================
+       JP Note !!! : As of 2023-05-10 :
+       FileUpload widget fails on large files (24k rows x 300 columns)
+       Use ImportButtonClicked() instead with fileImport name & read_csv
+       ==================================================================
+
        The FileUpload widget value attribute is a tuple with a dictionary 
        for each uploaded file. The default is multiple = False :
           FileUpload( accept = ' ',  multiple = False )
@@ -302,7 +307,14 @@ def onFileImportChange( b = None ):
 
 #============================================================================
 def ImportButtonClicked( b ):
-    '''dataFrameIn assigned externally'''
+    '''Upload DataFrame manually since FileUpload widget fails on large files'''
+
+    global dataFrameIn
+
+    # JP Workaround for FileUpload widget fails on large files
+    fileName    = Widgets['fileImport'].value
+    dataFrameIn = read_csv( fileName )
+
     RefreshData()
 
 #============================================================================
@@ -457,9 +469,15 @@ def Dashboard():
 
     plotSelect = widgets.SelectMultiple( description='Plot Columns' )
 
-    fileImport = widgets.FileUpload( multiple = False )
-    # Callback function on fileImport
-    fileImport.observe( onFileImportChange, names = 'value' )
+    # JP FileUpload() widget does not work on large files (~50 MB)
+    #   fileImport = widgets.FileUpload( accept = '.csv', multiple = False )
+    #   Callback function on fileImport
+    #   fileImport.observe( onFileImportChange, names = 'value' )
+    
+    # JP Instead, read file name from fileImport TextBox
+    # Callback function is on ImportButtonClicked to load fileUpload.value
+    fileImport = widgets.Text( value='', description='File Upload',
+                               style = {'description_width' : 'initial'} )
 
     # Checkbox ----------------------------------------------------------
     plot = widgets.Checkbox( value=True, description='plot',
@@ -641,7 +659,7 @@ def MutualInfoDashboard():
     mid_box   = widgets.VBox( [ Widgets['maxLag'],
                                 Widgets['tau'], Widgets['MI_neighbors'] ] )
 
-    right_box = widgets.VBox( [ Widgets['fileImport'],
+    right_box = widgets.VBox( [ # Widgets['fileImport'],
                                 Widgets['plot'], Widgets['verbose'] ] )
 
     RenderDashboard( left_box, mid_box, right_box )
@@ -656,7 +674,7 @@ def EmbedDashboard():
     mid_box   = widgets.VBox( [ Widgets['E'], Widgets['tau'],
                                 Widgets['plotSelect'] ] )
 
-    right_box = widgets.VBox( [ Widgets['fileImport'], # Widgets['outputEmbed'],
+    right_box = widgets.VBox( [ # Widgets['fileImport'], Widgets['outputEmbed'],
                                 Widgets['plot'], Widgets['verbose'] ] )
 
     RenderDashboard( left_box, mid_box, right_box )
@@ -674,7 +692,8 @@ def PredictNonlinearDashboard():
                                 Widgets['tau'], Widgets['thetas'],
                                 Widgets['exclusionRadius'], Widgets['CE'] ] )
 
-    right_box = widgets.VBox( [ Widgets['fileImport'], Widgets['outputFile'],
+    right_box = widgets.VBox( [ # Widgets['fileImport'],
+                                Widgets['outputFile'],
                                 Widgets['nThreads'],   Widgets['plot'],
                                 Widgets['embedded'] ,
                                 Widgets['verbose'] ] )
@@ -694,7 +713,8 @@ def PredictIntervalDashboard():
                                 Widgets['E'], Widgets['tau'],
                                 Widgets['exclusionRadius'], Widgets['CE'] ] )
 
-    right_box = widgets.VBox( [ Widgets['fileImport'], Widgets['outputFile'],
+    right_box = widgets.VBox( [ # Widgets['fileImport'],
+                                Widgets['outputFile'],
                                 Widgets['nThreads'],   Widgets['plot'],
                                 Widgets['embedded'],   Widgets['verbose'] ] )
 
@@ -713,7 +733,8 @@ def EmbedDimensionDashboard():
                                 Widgets['Tp'],  Widgets['tau'],
                                 Widgets['exclusionRadius'], Widgets['CE'] ] )
 
-    right_box = widgets.VBox( [ Widgets['fileImport'], Widgets['outputFile'],
+    right_box = widgets.VBox( [ # Widgets['fileImport'],
+                                Widgets['outputFile'],
                                 Widgets['nThreads'],   Widgets['plot'],
                                 Widgets['verbose'] ] )
 
@@ -733,7 +754,8 @@ def MultiviewDashboard():
                                 Widgets['exclusionRadius'],
                                 Widgets['D'],  Widgets['multiview'] ] )
 
-    right_box = widgets.VBox( [ Widgets['fileImport'], Widgets['outputFile'],
+    right_box = widgets.VBox( [ # Widgets['fileImport'],
+                                Widgets['outputFile'],
                                 Widgets['nThreads'],   Widgets['plot'],
                                 Widgets['trainLib'],   Widgets['excludeTarget'],
                                 Widgets['verbose'] ] )
@@ -753,7 +775,8 @@ def CCMDashboard():
                                 Widgets['tau'], Widgets['exclusionRadius'],
                                 Widgets['subsample'] ] )
 
-    right_box = widgets.VBox( [ Widgets['fileImport'],  Widgets['outputFile'],
+    right_box = widgets.VBox( [ # Widgets['fileImport'],
+                                Widgets['outputFile'],
                                 Widgets['plot'],        Widgets['embedded'],
                                 Widgets['replacement'], Widgets['randomLib'],
                                 Widgets['verbose'] ] )
@@ -776,7 +799,8 @@ def SMapDashboard():
                                 Widgets['exclusionRadius'],
                                 Widgets['CE'],    Widgets['generateSteps'] ] )
 
-    right_box = widgets.VBox( [ Widgets['fileImport'], Widgets['outputFile'],
+    right_box = widgets.VBox( [ # Widgets['fileImport'],
+                                Widgets['outputFile'],
                                 Widgets['plot'],       Widgets['embedded'],
                                 Widgets['verbose'] ] )
 
@@ -796,7 +820,8 @@ def SimplexDashboard():
                                 Widgets['exclusionRadius'],
                                 Widgets['CE'],  Widgets['generateSteps'] ] )
 
-    right_box = widgets.VBox( [ Widgets['fileImport'], Widgets['outputFile'],
+    right_box = widgets.VBox( [ # Widgets['fileImport'],
+                                Widgets['outputFile'],
                                 Widgets['plot'],       Widgets['embedded'],
                                 Widgets['verbose'] ] )
 
