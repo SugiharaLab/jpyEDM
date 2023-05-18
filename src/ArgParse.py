@@ -9,11 +9,11 @@ def ParseCmdLine():
     nargs = '+' All command-line args are gathered into a list, and,
                 an error message generated if not at least one argument.
     '''
-    
+
     parser = ArgumentParser( description = 'jpyEDM' )
-    
+
     parser.add_argument('-m', '--method',
-                        dest   = 'method', type = str, 
+                        dest   = 'method', type = str,
                         action = 'store', default = 'Simplex',
                         help = 'Type of projection Simplex or SMap.')
 
@@ -23,12 +23,12 @@ def ParseCmdLine():
                         help = 'sklearn solver for SMap.')
 
     parser.add_argument('-p', '--pred', nargs = '+',
-                        dest   = 'pred', type = int, 
+                        dest   = 'pred', type = int,
                         action = 'store', default = [1, 10],
                         help = 'Prediction start/stop indices.')
 
     parser.add_argument('-l', '--lib', nargs = '+',
-                        dest   = 'lib', type = int, 
+                        dest   = 'lib', type = int,
                         action = 'store', default = [1, 10],
                         help = 'Library start/stop indices.')
 
@@ -38,32 +38,32 @@ def ParseCmdLine():
                         help = 'Max Embedding dimension.')
 
     parser.add_argument('-E', '--EmbedDimension',
-                        dest   = 'E', type = int, 
+                        dest   = 'E', type = int,
                         action = 'store', default = 2,
                         help = 'Embedding dimension.')
 
     parser.add_argument('-D', '--MultiviewDimension',
-                        dest   = 'D', type = int, 
+                        dest   = 'D', type = int,
                         action = 'store', default = 2,
                         help = 'Multiview dimension.')
 
     parser.add_argument('-k', '--knn',
-                        dest   = 'knn', type = int, 
+                        dest   = 'knn', type = int,
                         action = 'store', default = 0,
                         help = 'Number of nearest neighbors.')
 
     parser.add_argument('-T', '--Tp',
-                        dest   = 'Tp', type = int, 
+                        dest   = 'Tp', type = int,
                         action = 'store', default = 1,
                         help = 'Forecast interval (1 default).')
 
     parser.add_argument('-mT', '--maxTp',
-                        dest   = 'maxTp', type = int, 
+                        dest   = 'maxTp', type = int,
                         action = 'store', default = 10,
                         help = 'Max Predict interval.')
 
     parser.add_argument('-u', '--tau',
-                        dest   = 'tau', type = int, 
+                        dest   = 'tau', type = int,
                         action = 'store', default = -1,
                         help = 'Time delay (tau).')
 
@@ -78,24 +78,24 @@ def ParseCmdLine():
                         help = 'Data library target column name.')
 
     parser.add_argument('-t', '--theta',
-                        dest   = 'theta', type = float, 
+                        dest   = 'theta', type = float,
                         action = 'store', default = 0,
                         help = 'S-Map local weighting exponent (0 default).')
 
     parser.add_argument('-ts', '--thetas',
-                        dest   = 'thetas', type = str, 
+                        dest   = 'thetas', type = str,
                         action = 'store',
                         default = "0.01 0.05 0.1 0.2 0.4 0.6 0.8 1 1.5 " +\
                                   "2 2.5 3 3.5 4 5 6 7 8 9 10 11 12 13 14 15",
                         help = 'Predict Nonlinear thetas.')
 
     parser.add_argument('-x', '--exclusionRadius',
-                        dest   = 'exclusionRadius', type = int, 
+                        dest   = 'exclusionRadius', type = int,
                         action = 'store', default = 0,
                         help = 'Time vector exclusion radius (0 default).')
 
     parser.add_argument('-M', '--multiview',
-                        dest   = 'multiview', type = int, 
+                        dest   = 'multiview', type = int,
                         action = 'store', default = 0,
                         help = 'Multiview ensemble size (sqrt(m) default).')
 
@@ -121,34 +121,34 @@ def ParseCmdLine():
                         help = 'CCM Library size range [start, stop, incr].')
 
     parser.add_argument('-s', '--subsample',
-                        dest   = 'subsample', type = int, 
+                        dest   = 'subsample', type = int,
                         action = 'store',      default = 100,
                         help = 'Number subsamples generated at each library.')
 
     parser.add_argument('-R', '--random',
-                        dest   = 'random', 
+                        dest   = 'random',
                         action = 'store_true', default = False,
                         help = 'CCM random library samples enabled.')
 
     parser.add_argument('-rp', '--replacement',
-                        dest   = 'replacement', 
+                        dest   = 'replacement',
                         action = 'store_true', default = False,
                         help = 'CCM random library with replacement: ' +\
                                '(False default).')
 
     parser.add_argument('-id', '--includeData',
-                        dest   = 'includeData', 
+                        dest   = 'includeData',
                         action = 'store_true', default = False,
                         help = 'CCM: Include Data from each model: ' +\
                                '(False default).')
 
     parser.add_argument('-S', '--seed',
-                        dest   = 'seed', type = int, 
-                        action = 'store',      default = 0,
+                        dest   = 'seed', type = int,
+                        action = 'store', default = 0,
                         help = 'Random number generator seed: (None default)')
 
     parser.add_argument('-g', '--generateSteps',
-                        dest   = 'generateSteps', type = int, 
+                        dest   = 'generateSteps', type = int,
                         action = 'store', default = 0,
                         help = 'Prediction feedback generative steps.')
 
@@ -158,7 +158,7 @@ def ParseCmdLine():
                         help = 'CE conditional embedding expression.')
 
     parser.add_argument('-nt', '--nThreads',
-                        dest   = 'nThreads', type = int, 
+                        dest   = 'nThreads', type = int,
                         action = 'store', default = 4,
                         help = 'Number of threads.')
 
@@ -181,62 +181,67 @@ def ParseCmdLine():
                         dest   = 'outputFile', type = str, 
                         action = 'store',      default = None,
                         help = 'Output prediction file.')
-    
+
     parser.add_argument('-os', '--outputSmapFile',
                         dest   = 'outputSmapFile', type = str, 
                         action = 'store',      default = None,
                         help = 'S-map Output file.')
-    
+
     parser.add_argument('-oe', '--outputEmbed',
                         dest   = 'outputEmbed', type = str, 
                         action = 'store',      default = None,
                         help = 'Output embedded data file.')
-    
+
     parser.add_argument('-fs', '--figureSize', nargs = 2,
                         dest   = 'figureSize', type = float,
                         action = 'store', default = [ 4, 2.5 ],
                         help = 'Figure size (default [5, 3]).')
-    
+
     parser.add_argument('-P', '--plot',
                         dest   = 'plot',
                         action = 'store_true', default = False,
                         help = 'Show plot.')
-    
+
     parser.add_argument('-PT', '--plotTitle',
                         dest   = 'plotTitle', type = str,
                         action = 'store', default = None,
                         help = 'Plot title.')
-    
+
     parser.add_argument('-PX', '--plotXLabel',
                         dest   = 'plotXLabel', type = str,
                         action = 'store', default = 'Time ()',
                         help = 'Plot x-axis label.')
-    
+
     parser.add_argument('-PY', '--plotYLabel',
                         dest   = 'plotYLabel', type = str,
                         action = 'store', default = 'Amplitude ()',
                         help = 'Plot y-axis label.')
-    
-    parser.add_argument('-PD', '--plotDate',  # Set automatically 
+
+    parser.add_argument('-PD', '--plotDate',  # Set automatically
                         dest   = 'plotDate',
                         action = 'store_true', default = False,
                         help = 'Time values are pyplot datetime numbers.')
-    
+
+    parser.add_argument('-PS', '--scatter',
+                        dest   = 'scatter',
+                        action = 'store_true', default = False,
+                        help = 'Scatter plot.')
+
     parser.add_argument('-v', '--verbose',
                         dest   = 'verbose',
                         action = 'store_true', default = False,
                         help = 'Print status messages.')
-    
+
     parser.add_argument('-w', '--warnings',
                         dest   = 'warnings',
                         action = 'store_true', default = False,
                         help = 'Show warnings.')
-    
+
     parser.add_argument('-d', '--debug',
                         dest   = 'Debug',
                         action = 'store_true', default = False,
                         help = 'Activate Debug messsages.')
-    
+
     args = parser.parse_args()
 
     # Convert figureSize to a tuple

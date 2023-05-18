@@ -65,7 +65,7 @@ outputTab.set_title( 1, 'Output'  )
 outputTab.set_title( 2, '2D Plot' )
 outputTab.set_title( 3, '3D Plot' )
 
-version = "Version 0.5 2023-05-10"
+version = "Version 0.5.1 2023-05-18"
 
 #============================================================================
 def Version():
@@ -257,18 +257,22 @@ def DataPlotButtonClicked( b = None ):
     '''Explicitly call Data or Embed Plots'''
 
     pltClose() # Jupyter calls plt.show, but not close?
+    UpdateArgs()
 
     columnList = Widgets['plotSelect'].value
 
     if len( columnList ) == 2 :
         Plot2DOutput.clear_output()
+        if args.scatter : kind = 'scatter'
+        else :            kind = 'line'
         with Plot2DOutput :
-            display( dataFrameIn.plot( columnList[0], columnList[1] ) )
+            display( dataFrameIn.plot( columnList[0], columnList[1],
+                                       kind = kind ) )
 
     elif len( columnList ) == 3 :
         Plot3DOutput.clear_output()
         with Plot3DOutput :
-            display( Plot3D( dataFrameIn, columnList ) )
+            display( Plot3D( dataFrameIn, columnList, args ) )
 
 #============================================================================
 def onFileImportChange( b = None ):
@@ -480,35 +484,39 @@ def Dashboard():
                                style = {'description_width' : 'initial'} )
 
     # Checkbox ----------------------------------------------------------
-    plot = widgets.Checkbox( value=True, description='plot',
+    plot = widgets.Checkbox( value = True, description='plot',
                              indent = False, 
                              layout = widgets.Layout(width='60%') )
 
-    randomLib = widgets.Checkbox( value=True, description='randomLib',
+    scatter = widgets.Checkbox( value = False, description='scatter plot',
+                                indent = False,
+                                layout = widgets.Layout(width='60%') )
+
+    randomLib = widgets.Checkbox( value = True, description='randomLib',
                                   indent = False, 
                                   layout = widgets.Layout(width='60%') )
 
-    trainLib = widgets.Checkbox( value=True, description='trainLib',
+    trainLib = widgets.Checkbox( value = True, description='trainLib',
                                  indent = False, 
                                  layout = widgets.Layout(width='60%') )
 
-    embedded = widgets.Checkbox( value=False, description='embedded',
+    embedded = widgets.Checkbox( value = False, description='embedded',
                                  indent = False, 
                                  layout = widgets.Layout(width='60%') )
 
-    replacement = widgets.Checkbox( value=False, description='replacement',
+    replacement = widgets.Checkbox( value = False, description='replacement',
                                     indent = False, 
                                     layout = widgets.Layout(width='60%') )
 
-    excludeTarget = widgets.Checkbox( value=False, description='excludeTarget',
+    excludeTarget = widgets.Checkbox( value = False, description='excludeTarget',
                                       indent = False, 
                                       layout = widgets.Layout(width='60%') )
 
-    running = widgets.Checkbox( value=False, description='Running',
+    running = widgets.Checkbox( value = False, description='Running',
                                 indent = False, 
                                 layout = widgets.Layout(width='60%') )
 
-    verbose = widgets.Checkbox( value=False, description='verbose',
+    verbose = widgets.Checkbox( value = False, description='verbose',
                                 indent = False, 
                                 layout = widgets.Layout(width='60%') )
 
@@ -556,6 +564,7 @@ def Dashboard():
     Widgets['outputEmbed']    = outputEmbed
     Widgets['plotSelect']     = plotSelect
     Widgets['plot']           = plot
+    Widgets['scatter']        = scatter
     Widgets['verbose']        = verbose
     Widgets['running']        = running
 
@@ -620,6 +629,7 @@ def UpdateArgs():
     args.outputSmapFile  = Widgets['outputSmapFile'].value
     args.outputEmbed     = Widgets['outputEmbed'].value
     args.plot            = Widgets['plot'].value
+    args.scatter         = Widgets['scatter'].value
     args.verbose         = Widgets['verbose'].value
     args.running         = Widgets['running'].value
 
@@ -639,7 +649,9 @@ def DataDashboard():
     Widgets[ 'plotSelect' ].options = dataFrameIn.columns
 
     # Organize widgets 
-    left_box  = widgets.VBox( [ Widgets['method'], Widgets['dataPlotButton'] ] )
+    left_box  = widgets.VBox( [ Widgets['method'],
+                                Widgets['dataPlotButton'],
+                                Widgets['scatter'] ] )
     
     mid_box   = widgets.VBox( [ Widgets['plotSelect'] ] )
     
@@ -887,7 +899,7 @@ def Embed_():
         elif len( columnList ) == 3 :
             Plot3DOutput.clear_output()
             with Plot3DOutput :
-                display( Plot3D( D, columnList ) )
+                display( Plot3D( D, columnList, args ) )
 
     return D
 

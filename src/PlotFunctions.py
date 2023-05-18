@@ -53,7 +53,7 @@ def PlotPredictInterval( df, args ):
 #----------------------------------------------------------------------------
 # 
 #----------------------------------------------------------------------------
-def Plot3D( D, columnList ):
+def Plot3D( D, columnList, args ):
 
     fig = plt.figure()
     ax  = fig.add_subplot( projection = '3d' )
@@ -63,7 +63,12 @@ def Plot3D( D, columnList ):
               D[ columnList[2] ]
 
     # Plot
-    ax.scatter( X, Y, Z, zdir = 'z', s = 20, c = None, depthshade = True )
+    if args.scatter :
+        # s: marker size in points**2
+        # c: marker colors
+        ax.scatter( X, Y, Z, zdir = 'z', s = 20, c = None, depthshade = True )
+    else :
+        ax.plot( X, Y, Z )
     ax.set_xlabel( columnList[0] )
     ax.set_ylabel( columnList[1] )
     ax.set_zlabel( columnList[2] )
