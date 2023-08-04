@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+title: jpyEDM
+message: >-
+  If you use this software please cite.
+type: software
+authors:
+  - given-names: Joseph
+    family-names: Park
+    email: josephpark@ieee.org
+    orcid: 'https://orcid.org/0000-0001-5411-1409'
+  - {}
+identifiers:
+  - type: url
+    value: 'https://github.com/SugiharaLab/jpyEDM'
+repository-code: 'https://github.com/SugiharaLab/jpyEDM'
+url: 'https://github.com/SugiharaLab/jpyEDM#readme'
+abstract: >-
+  Jupyter notebook GUI frontend for pyEDM.
