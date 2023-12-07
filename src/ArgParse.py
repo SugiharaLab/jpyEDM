@@ -182,10 +182,15 @@ def ParseCmdLine():
                         action = 'store',      default = None,
                         help = 'Output prediction file.')
 
-    parser.add_argument('-os', '--outputSmapFile',
-                        dest   = 'outputSmapFile', type = str, 
-                        action = 'store',      default = None,
-                        help = 'S-map Output file.')
+    parser.add_argument('-os', '--SmapCoefFile',
+                        dest   = 'SmapCoefFile', type = str,
+                        action = 'store',      default = '',
+                        help = 'S-map Coefficient output file.')
+
+    parser.add_argument('-ov', '--SmapSVFile', # Not in GUI
+                        dest   = 'SmapSVFile', type = str,
+                        action = 'store',      default = '',
+                        help = 'S-map Singular Values output file.')
 
     parser.add_argument('-oe', '--outputEmbed',
                         dest   = 'outputEmbed', type = str, 
@@ -231,6 +236,11 @@ def ParseCmdLine():
                         dest   = 'verbose',
                         action = 'store_true', default = False,
                         help = 'Print status messages.')
+
+    parser.add_argument('-nT', '--noTime', # Not in GUI
+                        dest   = 'noTime',
+                        action = 'store_true', default = False,
+                        help = 'First data column is not time.')
 
     parser.add_argument('-w', '--warnings',
                         dest   = 'warnings',

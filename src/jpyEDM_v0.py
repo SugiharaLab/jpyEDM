@@ -65,7 +65,7 @@ outputTab.set_title( 1, 'Output'  )
 outputTab.set_title( 2, '2D Plot' )
 outputTab.set_title( 3, '3D Plot' )
 
-version = "Version 0.5.1 2023-05-18"
+version = "Version 0.5.2 2023-12-07"
 
 #============================================================================
 def Version():
@@ -925,7 +925,8 @@ def EmbedDimension_():
                         verbose     = args.verbose,
                         validLib    = validLib,
                         numThreads  = args.nThreads,
-                        showPlot    = False )
+                        showPlot    = False,
+                        noTime      = args.noTime )
 
     with dfOutput :
         display( D )
@@ -960,7 +961,8 @@ def PredictInterval_():
                          verbose     = args.verbose,
                          validLib    = validLib,
                          numThreads  = args.nThreads,
-                         showPlot    = False )
+                         showPlot    = False,
+                         noTime      = args.noTime )
 
     with dfOutput :
         display( D )
@@ -997,7 +999,8 @@ def PredictNonlinear_():
                           verbose     = args.verbose,
                           validLib    = validLib,
                           numThreads  = args.nThreads,
-                          showPlot    = False )
+                          showPlot    = False,
+                          noTime      = args.noTime )
 
     with dfOutput :
         display( D )
@@ -1079,7 +1082,8 @@ def CCM_():
              embedded        = args.embedded,
              includeData     = args.includeData,
              parameterList   = False,
-             verbose         = args.verbose )
+             verbose         = args.verbose,
+             noTime          = args.noTime )
 
     with dfOutput :
         display( D )
@@ -1112,15 +1116,16 @@ def SMap_():
               exclusionRadius = args.exclusionRadius,
               columns         = args.columns,
               target          = args.target,
-              smapFile        = args.outputSmapFile,
-              jacobians       = "",
+              smapCoefFile    = args.SmapCoefFile,
+              smapSVFile      = args.SmapSVFile,
               solver          = SMapSolver,
               embedded        = args.embedded,
-              const_pred      = False,
               verbose         = args.verbose,
+              const_pred      = False,
               validLib        = validLib,
               generateSteps   = args.generateSteps,
-              parameterList   = False )
+              parameterList   = False,
+              noTime          = args.noTime )
 
     with dfOutput :
         display( D['predictions' ] )
@@ -1158,7 +1163,8 @@ def Simplex_():
                  verbose         = args.verbose,
                  validLib        = validLib,
                  generateSteps   = args.generateSteps,
-                 parameterList   = False )
+                 parameterList   = False,
+                 noTime          = args.noTime )
 
     with dfOutput :
         display( D )
