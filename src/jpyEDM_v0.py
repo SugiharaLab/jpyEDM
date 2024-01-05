@@ -65,7 +65,7 @@ outputTab.set_title( 1, 'Output'  )
 outputTab.set_title( 2, '2D Plot' )
 outputTab.set_title( 3, '3D Plot' )
 
-version = "Version 0.5.2 2023-12-07"
+version = "Version 0.5.3 2024-01-05"
 
 #============================================================================
 def Version():
@@ -292,7 +292,7 @@ def onFileImportChange( b = None ):
     global dataFrameIn
 
     # Crazy unpacking of FileUpload widget return...
-    fileUploadObj = Widgets['fileImport'].value # <class 'tuple'>
+    fileUploadObj = Widgets['fileUpload'].value # <class 'tuple'>
 
     # If fileUploadObj is a dictionary from ipywidgets < 8:
     if isinstance( fileUploadObj, dict ):
@@ -307,7 +307,7 @@ def onFileImportChange( b = None ):
     RefreshData()
 
     # Crazy hack to reset the FileUpload widget counter
-    Widgets['fileImport']._counter = 0
+    Widgets['fileUpload']._counter = 0
 
 #============================================================================
 def ImportButtonClicked( b ):
@@ -474,13 +474,13 @@ def Dashboard():
     plotSelect = widgets.SelectMultiple( description='Plot Columns' )
 
     # JP FileUpload() widget does not work on large files (~50 MB)
-    #   fileImport = widgets.FileUpload( accept = '.csv', multiple = False )
+    fileUpload = widgets.FileUpload( accept = '.csv', multiple = False )
     #   Callback function on fileImport
-    #   fileImport.observe( onFileImportChange, names = 'value' )
+    fileUpload.observe( onFileImportChange, names = 'value' )
     
     # JP Instead, read file name from fileImport TextBox
     # Callback function is on ImportButtonClicked to load fileUpload.value
-    fileImport = widgets.Text( value='', description='File Upload',
+    fileImport = widgets.Text( value='', description='File',
                                style = {'description_width' : 'initial'} )
 
     # Checkbox ----------------------------------------------------------
@@ -521,52 +521,53 @@ def Dashboard():
                                 layout = widgets.Layout(width='60%') )
 
     # Populate global dictionary of widgets
-    Widgets['runButton']      = runButton
-    Widgets['fileImport']     = fileImport
-    Widgets['importButton']   = importButton
-    Widgets['dataPlotButton'] = dataPlotButton
-    Widgets['method']         = method
-    Widgets['solver']         = solver
-    Widgets['lib']            = lib
-    Widgets['pred']           = pred
-    Widgets['E']              = E
-    Widgets['maxE']           = maxE
-    Widgets['D']              = D
-    Widgets['knn']            = knn
-    Widgets['Tp']             = Tp
-    Widgets['maxTp']          = maxTp
-    Widgets['exclusionRadius']= exclusionRadius
-    Widgets['theta']          = theta
-    Widgets['thetas']         = thetas
-    Widgets['alpha']          = alpha
-    Widgets['l1_ratio']       = l1_ratio
-    Widgets['tau']            = tau
-    Widgets['columns']        = columns
-    Widgets['target']         = target
-    Widgets['columnCCM']      = columnCCM
-    Widgets['targetCCM']      = targetCCM
-    Widgets['embedded']       = embedded
-    Widgets['generateSteps']  = generateSteps
-    Widgets['CE']             = CE
-    Widgets['multiview']      = multiview
-    Widgets['trainLib']       = trainLib
-    Widgets['excludeTarget']  = excludeTarget
-    Widgets['libsize']        = libsize
-    Widgets['subsample']      = subsample
-    Widgets['randomLib']      = randomLib
-    Widgets['replacement']    = replacement
-    Widgets['seed']           = seed
-    Widgets['maxLag']         = maxLag
-    Widgets['MI_neighbors']   = MI_neighbors
-    Widgets['nThreads']       = nThreads
-    Widgets['outputFile']     = outputFile
-    Widgets['outputSmapFile'] = outputSmapFile
-    Widgets['outputEmbed']    = outputEmbed
-    Widgets['plotSelect']     = plotSelect
-    Widgets['plot']           = plot
-    Widgets['scatter']        = scatter
-    Widgets['verbose']        = verbose
-    Widgets['running']        = running
+    Widgets['runButton']       = runButton
+    Widgets['fileUpload']      = fileUpload
+    Widgets['fileImport']      = fileImport
+    Widgets['importButton']    = importButton
+    Widgets['dataPlotButton']  = dataPlotButton
+    Widgets['method']          = method
+    Widgets['solver']          = solver
+    Widgets['lib']             = lib
+    Widgets['pred']            = pred
+    Widgets['E']               = E
+    Widgets['maxE']            = maxE
+    Widgets['D']               = D
+    Widgets['knn']             = knn
+    Widgets['Tp']              = Tp
+    Widgets['maxTp']           = maxTp
+    Widgets['exclusionRadius'] = exclusionRadius
+    Widgets['theta']           = theta
+    Widgets['thetas']          = thetas
+    Widgets['alpha']           = alpha
+    Widgets['l1_ratio']        = l1_ratio
+    Widgets['tau']             = tau
+    Widgets['columns']         = columns
+    Widgets['target']          = target
+    Widgets['columnCCM']       = columnCCM
+    Widgets['targetCCM']       = targetCCM
+    Widgets['embedded']        = embedded
+    Widgets['generateSteps']   = generateSteps
+    Widgets['CE']              = CE
+    Widgets['multiview']       = multiview
+    Widgets['trainLib']        = trainLib
+    Widgets['excludeTarget']   = excludeTarget
+    Widgets['libsize']         = libsize
+    Widgets['subsample']       = subsample
+    Widgets['randomLib']       = randomLib
+    Widgets['replacement']     = replacement
+    Widgets['seed']            = seed
+    Widgets['maxLag']          = maxLag
+    Widgets['MI_neighbors']    = MI_neighbors
+    Widgets['nThreads']        = nThreads
+    Widgets['outputFile']      = outputFile
+    Widgets['outputSmapFile']  = outputSmapFile
+    Widgets['outputEmbed']     = outputEmbed
+    Widgets['plotSelect']      = plotSelect
+    Widgets['plot']            = plot
+    Widgets['scatter']         = scatter
+    Widgets['verbose']         = verbose
+    Widgets['running']         = running
 
     # Load initial data
     global dataFrameIn
@@ -655,8 +656,9 @@ def DataDashboard():
     
     mid_box   = widgets.VBox( [ Widgets['plotSelect'] ] )
     
-    right_box = widgets.VBox( [ widgets.HBox( [ Widgets['fileImport'],
-                                                Widgets['importButton'] ] ) ] )
+    right_box = widgets.VBox( [ Widgets['fileUpload'], # fails large files
+                                widgets.HBox( [ Widgets['fileImport'] ] ),
+                                Widgets['importButton'] ] )
 
     RenderDashboard( left_box, mid_box, right_box )
 
@@ -671,8 +673,7 @@ def MutualInfoDashboard():
     mid_box   = widgets.VBox( [ Widgets['maxLag'],
                                 Widgets['tau'], Widgets['MI_neighbors'] ] )
 
-    right_box = widgets.VBox( [ # Widgets['fileImport'],
-                                Widgets['plot'], Widgets['verbose'] ] )
+    right_box = widgets.VBox( [ Widgets['plot'], Widgets['verbose'] ] )
 
     RenderDashboard( left_box, mid_box, right_box )
 
@@ -686,7 +687,7 @@ def EmbedDashboard():
     mid_box   = widgets.VBox( [ Widgets['E'], Widgets['tau'],
                                 Widgets['plotSelect'] ] )
 
-    right_box = widgets.VBox( [ # Widgets['fileImport'], Widgets['outputEmbed'],
+    right_box = widgets.VBox( [ # Widgets['outputEmbed'],
                                 Widgets['plot'], Widgets['verbose'] ] )
 
     RenderDashboard( left_box, mid_box, right_box )
@@ -704,8 +705,7 @@ def PredictNonlinearDashboard():
                                 Widgets['tau'], Widgets['thetas'],
                                 Widgets['exclusionRadius'], Widgets['CE'] ] )
 
-    right_box = widgets.VBox( [ # Widgets['fileImport'],
-                                Widgets['outputFile'],
+    right_box = widgets.VBox( [ Widgets['outputFile'],
                                 Widgets['nThreads'],   Widgets['plot'],
                                 Widgets['embedded'] ,
                                 Widgets['verbose'] ] )
@@ -725,8 +725,7 @@ def PredictIntervalDashboard():
                                 Widgets['E'], Widgets['tau'],
                                 Widgets['exclusionRadius'], Widgets['CE'] ] )
 
-    right_box = widgets.VBox( [ # Widgets['fileImport'],
-                                Widgets['outputFile'],
+    right_box = widgets.VBox( [ Widgets['outputFile'],
                                 Widgets['nThreads'],   Widgets['plot'],
                                 Widgets['embedded'],   Widgets['verbose'] ] )
 
@@ -745,8 +744,7 @@ def EmbedDimensionDashboard():
                                 Widgets['Tp'],  Widgets['tau'],
                                 Widgets['exclusionRadius'], Widgets['CE'] ] )
 
-    right_box = widgets.VBox( [ # Widgets['fileImport'],
-                                Widgets['outputFile'],
+    right_box = widgets.VBox( [ Widgets['outputFile'],
                                 Widgets['nThreads'],   Widgets['plot'],
                                 Widgets['verbose'] ] )
 
@@ -766,8 +764,7 @@ def MultiviewDashboard():
                                 Widgets['exclusionRadius'],
                                 Widgets['D'],  Widgets['multiview'] ] )
 
-    right_box = widgets.VBox( [ # Widgets['fileImport'],
-                                Widgets['outputFile'],
+    right_box = widgets.VBox( [ Widgets['outputFile'],
                                 Widgets['nThreads'],   Widgets['plot'],
                                 Widgets['trainLib'],   Widgets['excludeTarget'],
                                 Widgets['verbose'] ] )
@@ -787,8 +784,7 @@ def CCMDashboard():
                                 Widgets['tau'], Widgets['exclusionRadius'],
                                 Widgets['subsample'] ] )
 
-    right_box = widgets.VBox( [ # Widgets['fileImport'],
-                                Widgets['outputFile'],
+    right_box = widgets.VBox( [ Widgets['outputFile'],
                                 Widgets['plot'],        Widgets['embedded'],
                                 Widgets['replacement'], Widgets['randomLib'],
                                 Widgets['verbose'] ] )
@@ -811,8 +807,7 @@ def SMapDashboard():
                                 Widgets['exclusionRadius'],
                                 Widgets['CE'],    Widgets['generateSteps'] ] )
 
-    right_box = widgets.VBox( [ # Widgets['fileImport'],
-                                Widgets['outputFile'],
+    right_box = widgets.VBox( [ Widgets['outputFile'],
                                 Widgets['plot'],       Widgets['embedded'],
                                 Widgets['verbose'] ] )
 
@@ -832,8 +827,7 @@ def SimplexDashboard():
                                 Widgets['exclusionRadius'],
                                 Widgets['CE'],  Widgets['generateSteps'] ] )
 
-    right_box = widgets.VBox( [ # Widgets['fileImport'],
-                                Widgets['outputFile'],
+    right_box = widgets.VBox( [ Widgets['outputFile'],
                                 Widgets['plot'],       Widgets['embedded'],
                                 Widgets['verbose'] ] )
 
