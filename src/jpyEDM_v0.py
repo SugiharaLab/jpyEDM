@@ -65,7 +65,7 @@ outputTab.set_title( 1, 'Output'  )
 outputTab.set_title( 2, '2D Plot' )
 outputTab.set_title( 3, '3D Plot' )
 
-version = "Version 0.5.3 2024-01-05"
+version = "Version 0.5.4 2024-01-06"
 
 #============================================================================
 def Version():
@@ -275,7 +275,7 @@ def DataPlotButtonClicked( b = None ):
             display( Plot3D( dataFrameIn, columnList, args ) )
 
 #============================================================================
-def onFileImportChange( b = None ):
+def onFileUploadChange( b = None ):
     '''Import dataFrameIn with FileUpload widget
 
        ==================================================================
@@ -303,6 +303,9 @@ def onFileImportChange( b = None ):
 
     dataFrameIn = read_csv( BytesIO( content ) )
 
+    # Set file name in fileImport text box
+    Widgets['fileImport'].value = Widgets['fileUpload'].value[0][ 'name' ]
+
     UpdateArgs()
     RefreshData()
 
@@ -323,7 +326,7 @@ def ImportButtonClicked( b ):
 
 #============================================================================
 def RefreshData():
-    '''Update parameters for onFileImportChange(), or,
+    '''Update parameters for onFileUploadChange(), or,
        Update parameters for new data assigned externally:
        EDM.dataFrameIn = EDM.read_csv('../data/TTTF.csv')'''
 
@@ -471,16 +474,16 @@ def Dashboard():
                                 indent = False, 
                                 style = {'description_width' : 'initial'} )
 
-    plotSelect = widgets.SelectMultiple( description='Plot Columns' )
+    plotSelect = widgets.SelectMultiple( description='' ) # Label in dashboard
 
     # JP FileUpload() widget does not work on large files (~50 MB)
     fileUpload = widgets.FileUpload( accept = '.csv', multiple = False )
-    #   Callback function on fileImport
-    fileUpload.observe( onFileImportChange, names = 'value' )
+    #   Callback function on fileUpload
+    fileUpload.observe( onFileUploadChange, names = 'value' )
     
     # JP Instead, read file name from fileImport TextBox
     # Callback function is on ImportButtonClicked to load fileUpload.value
-    fileImport = widgets.Text( value='', description='File',
+    fileImport = widgets.Text( value='', description='', # Label in dashboard
                                style = {'description_width' : 'initial'} )
 
     # Checkbox ----------------------------------------------------------
@@ -625,7 +628,7 @@ def UpdateArgs():
     if args.nThreads < 1 :
         args.nThreads = Widgets['nThreads'].value = 1
 
-    args.inputFile       = '' # fileImport directly assigns dataFrameIn
+    args.inputFile       = '' # fileUpload / Import directly assigns dataFrameIn
     args.outputFile      = Widgets['outputFile'].value
     args.outputSmapFile  = Widgets['outputSmapFile'].value
     args.outputEmbed     = Widgets['outputEmbed'].value
@@ -654,9 +657,11 @@ def DataDashboard():
                                 Widgets['dataPlotButton'],
                                 Widgets['scatter'] ] )
     
-    mid_box   = widgets.VBox( [ Widgets['plotSelect'] ] )
+    mid_box   = widgets.VBox( [ widgets.Label( 'Plot Columns:' ),
+                                Widgets['plotSelect'] ] )
     
     right_box = widgets.VBox( [ Widgets['fileUpload'], # fails large files
+                                widgets.Label( 'File:' ),
                                 widgets.HBox( [ Widgets['fileImport'] ] ),
                                 Widgets['importButton'] ] )
 
