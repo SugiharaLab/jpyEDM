@@ -11,7 +11,7 @@ from   IPython.display   import display
 from   IPython.display   import clear_output as clearDashboard
 import ipywidgets        as     widgets
 from   matplotlib.pyplot import close as pltClose # Jupyter does not close
-from   pandas            import read_csv, to_datetime
+from   pandas            import DataFrame, read_csv, to_datetime
 from   pyEDM             import *
 
 from IPython.core.getipython import get_ipython
@@ -65,7 +65,7 @@ outputTab.set_title( 1, 'Output'  )
 outputTab.set_title( 2, '2D Plot' )
 outputTab.set_title( 3, '3D Plot' )
 
-version = "Version 0.5.4 2024-01-06"
+version = "Version 0.6.0 2024-05-07"
 
 #============================================================================
 def Version():
@@ -440,8 +440,8 @@ def Dashboard():
     # Callback function on l1_ratio to instantiate solver
     l1_ratio.observe( onL1_ratioChange, names = 'value' )
     
-    generateSteps = widgets.IntText( value=0, description='generate',
-                                     layout = widgets.Layout(width='50%') )
+    #generateSteps = widgets.IntText( value=0, description='generate',
+    #                                 layout = widgets.Layout(width='50%') )
 
     CE = widgets.Text( value='', description='CE' )
 
@@ -452,8 +452,8 @@ def Dashboard():
 
     libsize = widgets.Text( value='20 200 20', description='libsize')
 
-    subsample = widgets.IntSlider( value=100, min=5, max=200, step=1,
-                                   description='subsample' )
+    sample = widgets.IntSlider( value=100, min=5, max=200, step=1,
+                                description='sample' )
 
     seed = widgets.IntText( value=None, description='seed' )
 
@@ -463,18 +463,17 @@ def Dashboard():
     MI_neighbors = widgets.IntSlider( value=10, min=2, max=100, step=1,
                                       description='MI_neighbors' )
 
-    nThreads = widgets.IntText( value=4, description='nThreads' )
+    nProcess = widgets.IntText( value=4, description='nProcess' )
 
-    outputFile = widgets.Text( value='', description='Prediction file')
+    # outputFile = widgets.Text( value='', description='Prediction file')
+    # outputSmapFile = widgets.Text( value='', description='S-Map Output',
+    #                                style = {'description_width' : 'initial'} )
+    # outputEmbed = widgets.Text( value='', description='Embed Output',
+    #                             indent = False, 
+    #                             style = {'description_width' : 'initial'} )
 
-    outputSmapFile = widgets.Text( value='', description='S-Map Output',
-                                   style = {'description_width' : 'initial'} )
-
-    outputEmbed = widgets.Text( value='', description='Embed Output',
-                                indent = False, 
-                                style = {'description_width' : 'initial'} )
-
-    plotSelect = widgets.SelectMultiple( description='' ) # Label in dashboard
+    # Label in dashboard
+    plotSelect = widgets.SelectMultiple( description='' )
 
     # JP FileUpload() widget does not work on large files (~50 MB)
     fileUpload = widgets.FileUpload( accept = '.csv', multiple = False )
@@ -495,21 +494,20 @@ def Dashboard():
                                 indent = False,
                                 layout = widgets.Layout(width='60%') )
 
-    randomLib = widgets.Checkbox( value = True, description='randomLib',
-                                  indent = False, 
-                                  layout = widgets.Layout(width='60%') )
-
     trainLib = widgets.Checkbox( value = True, description='trainLib',
                                  indent = False, 
                                  layout = widgets.Layout(width='60%') )
 
     embedded = widgets.Checkbox( value = False, description='embedded',
                                  indent = False, 
-                                 layout = widgets.Layout(width='60%') )
+                                 layout = widgets.Layout(width='100%') )
 
-    replacement = widgets.Checkbox( value = False, description='replacement',
-                                    indent = False, 
-                                    layout = widgets.Layout(width='60%') )
+    #randomLib = widgets.Checkbox( value = True, description='randomLib',
+    #                              indent = False, 
+    #                              layout = widgets.Layout(width='60%') )
+    #replacement = widgets.Checkbox( value = False, description='replacement',
+    #                                indent = False, 
+    #                                layout = widgets.Layout(width='60%') )
 
     excludeTarget = widgets.Checkbox( value = False, description='excludeTarget',
                                       indent = False, 
@@ -521,7 +519,7 @@ def Dashboard():
 
     verbose = widgets.Checkbox( value = False, description='verbose',
                                 indent = False, 
-                                layout = widgets.Layout(width='60%') )
+                                layout = widgets.Layout(width='100%') )
 
     # Populate global dictionary of widgets
     Widgets['runButton']       = runButton
@@ -550,22 +548,22 @@ def Dashboard():
     Widgets['columnCCM']       = columnCCM
     Widgets['targetCCM']       = targetCCM
     Widgets['embedded']        = embedded
-    Widgets['generateSteps']   = generateSteps
+    #Widgets['generateSteps']   = generateSteps
     Widgets['CE']              = CE
     Widgets['multiview']       = multiview
     Widgets['trainLib']        = trainLib
     Widgets['excludeTarget']   = excludeTarget
     Widgets['libsize']         = libsize
-    Widgets['subsample']       = subsample
-    Widgets['randomLib']       = randomLib
-    Widgets['replacement']     = replacement
+    Widgets['sample']          = sample
+    #Widgets['randomLib']      = randomLib
+    #Widgets['replacement']    = replacement
     Widgets['seed']            = seed
     Widgets['maxLag']          = maxLag
     Widgets['MI_neighbors']    = MI_neighbors
-    Widgets['nThreads']        = nThreads
-    Widgets['outputFile']      = outputFile
-    Widgets['outputSmapFile']  = outputSmapFile
-    Widgets['outputEmbed']     = outputEmbed
+    Widgets['nProcess']        = nProcess
+    #Widgets['outputFile']     = outputFile
+    #Widgets['outputSmapFile'] = outputSmapFile
+    #Widgets['outputEmbed']    = outputEmbed
     Widgets['plotSelect']      = plotSelect
     Widgets['plot']            = plot
     Widgets['scatter']         = scatter
@@ -601,37 +599,37 @@ def UpdateArgs():
     args.theta           = Widgets['theta'].value
     args.thetas          = Widgets['thetas'].value
     args.tau             = Widgets['tau'].value
-    args.columns         = Widgets['columns'].value
+    args.columns         = list( Widgets['columns'].value )
     args.target          = Widgets['target'].value
-    args.columnCCM       = Widgets['columnCCM'].value
-    args.targetCCM       = Widgets['targetCCM'].value
+    args.columnCCM       = list( Widgets['columnCCM'].value )
+    args.targetCCM       = list( Widgets['targetCCM'].value )
     args.multiview       = Widgets['multiview'].value
     args.trainLib        = Widgets['trainLib'].value
     args.excludeTarget   = Widgets['excludeTarget'].value
     args.embedded        = Widgets['embedded'].value
 
-    args.generateSteps   = Widgets['generateSteps'].value
-    if args.generateSteps < 0 :
-        args.generateSteps = Widgets['generateSteps'].value = 0
+    #args.generateSteps   = Widgets['generateSteps'].value
+    #if args.generateSteps < 0 :
+    #    args.generateSteps = Widgets['generateSteps'].value = 0
 
     args.CE              = Widgets['CE'].value
     #args.libSize        = [ int(x) for x in Widgets['libsize'].value.split() ]
     args.libSize         = Widgets['libsize'].value
-    args.subsample       = Widgets['subsample'].value
-    args.random          = Widgets['randomLib'].value
-    args.replacement     = Widgets['replacement'].value
+    args.sample          = Widgets['sample'].value
+    #args.random         = Widgets['randomLib'].value
+    #args.replacement    = Widgets['replacement'].value
     args.seed            = Widgets['seed'].value
     args.maxLag          = Widgets['maxLag'].value
     args.MI_neighbors    = Widgets['MI_neighbors'].value
 
-    args.nThreads        = Widgets['nThreads'].value
-    if args.nThreads < 1 :
-        args.nThreads = Widgets['nThreads'].value = 1
+    args.nProcess        = Widgets['nProcess'].value
+    if args.nProcess < 1 :
+        args.nProcess = Widgets['nProcess'].value = 1
 
     args.inputFile       = '' # fileUpload / Import directly assigns dataFrameIn
-    args.outputFile      = Widgets['outputFile'].value
-    args.outputSmapFile  = Widgets['outputSmapFile'].value
-    args.outputEmbed     = Widgets['outputEmbed'].value
+    #args.outputFile     = Widgets['outputFile'].value
+    #args.outputSmapFile = Widgets['outputSmapFile'].value
+    #args.outputEmbed    = Widgets['outputEmbed'].value
     args.plot            = Widgets['plot'].value
     args.scatter         = Widgets['scatter'].value
     args.verbose         = Widgets['verbose'].value
@@ -710,8 +708,8 @@ def PredictNonlinearDashboard():
                                 Widgets['tau'], Widgets['thetas'],
                                 Widgets['exclusionRadius'], Widgets['CE'] ] )
 
-    right_box = widgets.VBox( [ Widgets['outputFile'],
-                                Widgets['nThreads'],   Widgets['plot'],
+    right_box = widgets.VBox( [ #Widgets['outputFile'],
+                                Widgets['nProcess'],   Widgets['plot'],
                                 Widgets['embedded'] ,
                                 Widgets['verbose'] ] )
 
@@ -730,8 +728,8 @@ def PredictIntervalDashboard():
                                 Widgets['E'], Widgets['tau'],
                                 Widgets['exclusionRadius'], Widgets['CE'] ] )
 
-    right_box = widgets.VBox( [ Widgets['outputFile'],
-                                Widgets['nThreads'],   Widgets['plot'],
+    right_box = widgets.VBox( [ #Widgets['outputFile'],
+                                Widgets['nProcess'],   Widgets['plot'],
                                 Widgets['embedded'],   Widgets['verbose'] ] )
 
     RenderDashboard( left_box, mid_box, right_box )
@@ -749,8 +747,8 @@ def EmbedDimensionDashboard():
                                 Widgets['Tp'],  Widgets['tau'],
                                 Widgets['exclusionRadius'], Widgets['CE'] ] )
 
-    right_box = widgets.VBox( [ Widgets['outputFile'],
-                                Widgets['nThreads'],   Widgets['plot'],
+    right_box = widgets.VBox( [ #Widgets['outputFile'],
+                                Widgets['nProcess'],   Widgets['plot'],
                                 Widgets['verbose'] ] )
 
     RenderDashboard( left_box, mid_box, right_box )
@@ -769,8 +767,8 @@ def MultiviewDashboard():
                                 Widgets['exclusionRadius'],
                                 Widgets['D'],  Widgets['multiview'] ] )
 
-    right_box = widgets.VBox( [ Widgets['outputFile'],
-                                Widgets['nThreads'],   Widgets['plot'],
+    right_box = widgets.VBox( [ #Widgets['outputFile'],
+                                Widgets['nProcess'],   Widgets['plot'],
                                 Widgets['trainLib'],   Widgets['excludeTarget'],
                                 Widgets['verbose'] ] )
 
@@ -787,11 +785,11 @@ def CCMDashboard():
 
     mid_box   = widgets.VBox( [ Widgets['E'],   Widgets['knn'], Widgets['Tp'],
                                 Widgets['tau'], Widgets['exclusionRadius'],
-                                Widgets['subsample'] ] )
+                                Widgets['sample'] ] )
 
-    right_box = widgets.VBox( [ Widgets['outputFile'],
+    right_box = widgets.VBox( [ # Widgets['outputFile'],
                                 Widgets['plot'],        Widgets['embedded'],
-                                Widgets['replacement'], Widgets['randomLib'],
+                                # Widgets['replacement'], Widgets['randomLib'],
                                 Widgets['verbose'] ] )
 
     RenderDashboard( left_box, mid_box, right_box )
@@ -810,9 +808,10 @@ def SMapDashboard():
     mid_box   = widgets.VBox( [ Widgets['theta'], Widgets['E'], Widgets['Tp'],
                                 Widgets['tau'],   Widgets['knn'],
                                 Widgets['exclusionRadius'],
-                                Widgets['CE'],    Widgets['generateSteps'] ] )
+                                Widgets['CE'] # , Widgets['generateSteps']
+                               ] )
 
-    right_box = widgets.VBox( [ Widgets['outputFile'],
+    right_box = widgets.VBox( [ # Widgets['outputFile'],
                                 Widgets['plot'],       Widgets['embedded'],
                                 Widgets['verbose'] ] )
 
@@ -830,9 +829,10 @@ def SimplexDashboard():
     mid_box   = widgets.VBox( [ Widgets['E'],   Widgets['Tp'],
                                 Widgets['tau'], Widgets['knn'],
                                 Widgets['exclusionRadius'],
-                                Widgets['CE'],  Widgets['generateSteps'] ] )
+                                Widgets['CE'] #,  Widgets['generateSteps']
+                               ] )
 
-    right_box = widgets.VBox( [ Widgets['outputFile'],
+    right_box = widgets.VBox( [ #Widgets['outputFile'],
                                 Widgets['plot'],       Widgets['embedded'],
                                 Widgets['verbose'] ] )
 
@@ -871,13 +871,13 @@ def MutualInfo():
 def Embed_():
     '''Interface for Embed()'''
 
-    D = Embed( pathIn    = '', # args.path,
-               dataFile  = '', # args.inputFile,
-               dataFrame = dataFrameIn,
-               E         = args.E,
-               tau       = args.tau,
-               columns   = args.columns,
-               verbose   = args.verbose )
+    D = Embed( dataFrame   = dataFrameIn,
+               E           = args.E,
+               tau         = args.tau,
+               columns     = args.columns,
+               includeTime = False,
+               pathIn      = '',
+               dataFile    = None )
 
     Widgets[ 'plotSelect' ].options = D.columns
     columnList = Widgets['plotSelect'].value
@@ -907,25 +907,22 @@ def Embed_():
 def EmbedDimension_():
     '''Interface for EmbedDimension()'''
 
-    D = EmbedDimension( pathIn      = '', # args.path,
-                        dataFile    = '', # args.inputFile,
-                        dataFrame   = dataFrameIn,
-                        pathOut     = args.path,
-                        predictFile = args.outputFile,
+    D = EmbedDimension( dataFrame   = dataFrameIn,
+                        columns     = args.columns,
+                        target      = args.target,
+                        maxE        = args.maxE,
                         lib         = args.lib,
                         pred        = args.pred,
-                        maxE        = args.maxE,
                         Tp          = args.Tp,
                         tau         = args.tau,
                         exclusionRadius = args.exclusionRadius,
-                        columns     = args.columns,
-                        target      = args.target,
                         embedded    = args.embedded,
-                        verbose     = args.verbose,
                         validLib    = validLib,
-                        numThreads  = args.nThreads,
-                        showPlot    = False,
-                        noTime      = args.noTime )
+                        noTime      = args.noTime,
+                        ignoreNan   = True,
+                        verbose     = args.verbose,
+                        numProcess  = args.nProcess,
+                        showPlot    = False )
 
     with dfOutput :
         display( D )
@@ -943,25 +940,22 @@ def EmbedDimension_():
 def PredictInterval_():
     '''Interface for PredictInterval()'''
 
-    D = PredictInterval( pathIn      = '', # args.path,
-                         dataFile    = '', # args.inputFile,
-                         dataFrame   = dataFrameIn,
-                         pathOut     = args.path,
-                         predictFile = args.outputFile,
+    D = PredictInterval( dataFrame   = dataFrameIn,
+                         columns     = args.columns,
+                         target      = args.target,
                          lib         = args.lib,
                          pred        = args.pred,
                          maxTp       = args.maxTp,
                          E           = args.E,
                          tau         = args.tau,
                          exclusionRadius = args.exclusionRadius,
-                         columns     = args.columns,
-                         target      = args.target,
                          embedded    = args.embedded,
-                         verbose     = args.verbose,
                          validLib    = validLib,
-                         numThreads  = args.nThreads,
-                         showPlot    = False,
-                         noTime      = args.noTime )
+                         noTime      = args.noTime,
+                         ignoreNan   = True,
+                         verbose     = args.verbose,
+                         numProcess  = args.nProcess,
+                         showPlot    = False )
 
     with dfOutput :
         display( D )
@@ -979,27 +973,25 @@ def PredictInterval_():
 def PredictNonlinear_():
     '''Interface for PredictNonlinear()'''
 
-    D = PredictNonlinear( pathIn      = '', # args.path,
-                          dataFile    = '', # args.inputFile,
-                          dataFrame   = dataFrameIn,
-                          pathOut     = args.path,
-                          predictFile = args.outputFile,
+    D = PredictNonlinear( dataFrame   = dataFrameIn,
+                          columns     = args.columns,
+                          target      = args.target,
+                          theta       = args.thetas,
                           lib         = args.lib,
                           pred        = args.pred,
-                          theta       = args.thetas,
                           E           = args.E,
                           Tp          = args.Tp,
                           knn         = args.knn,
                           tau         = args.tau,
                           exclusionRadius = args.exclusionRadius,
-                          columns     = args.columns,
-                          target      = args.target,
+                          solver      = None,
                           embedded    = args.embedded,
-                          verbose     = args.verbose,
                           validLib    = validLib,
-                          numThreads  = args.nThreads,
-                          showPlot    = False,
-                          noTime      = args.noTime )
+                          noTime      = args.noTime,
+                          ignoreNan   = True,
+                          verbose     = args.verbose,
+                          numProcess  = args.nProcess,
+                          showPlot    = False )
 
     with dfOutput :
         display( D )
@@ -1024,11 +1016,9 @@ def Multiview_():
             Widgets['running'].value = False
             return None
 
-    D = Multiview( pathIn          = '', # args.path,
-                   dataFile        = '', # args.inputFile,
-                   dataFrame       = dataFrameIn,
-                   pathOut         = args.path,
-                   predictFile     = args.outputFile,
+    D = Multiview( dataFrame       = dataFrameIn,
+                   columns         = args.columns,
+                   target          = args.target,
                    lib             = args.lib,
                    pred            = args.pred,
                    D               = args.D,
@@ -1036,15 +1026,13 @@ def Multiview_():
                    Tp              = args.Tp,
                    knn             = args.knn,
                    tau             = args.tau,
-                   columns         = args.columns,
-                   target          = args.target,
                    multiview       = args.multiview,
                    exclusionRadius = args.exclusionRadius,
                    trainLib        = args.trainLib,
                    excludeTarget   = args.excludeTarget,
-                   parameterList   = False,
+                   ignoreNan       = True,
                    verbose         = args.verbose,
-                   numThreads      = args.nThreads )
+                   numProcess      = args.nProcess )
 
     with dfOutput :
         display( D[ 'View' ] )
@@ -1061,28 +1049,22 @@ def Multiview_():
 def CCM_():
     '''Interface for CCM()'''
 
-    D = CCM( pathIn          = '', # args.path,
-             dataFile        = '', # args.inputFile,
-             dataFrame       = dataFrameIn,
-             pathOut         = args.path,
-             predictFile     = args.outputFile,
+    D = CCM( dataFrame       = dataFrameIn,
+             columns         = columnCCMOrder, # Click order, not args
+             target          = targetCCMOrder, # Click order, not args
+             libSizes        = args.libSize,
+             sample          = args.sample,
              E               = args.E,
              Tp              = args.Tp,
              knn             = args.knn,
              tau             = args.tau,
              exclusionRadius = args.exclusionRadius,
-             columns         = columnCCMOrder, # Click order, not args
-             target          = targetCCMOrder, # Click order, not args
-             libSizes        = args.libSize,
-             sample          = args.subsample,
-             random          = args.random,
-             replacement     = args.replacement,
              seed            = args.seed,
              embedded        = args.embedded,
              includeData     = args.includeData,
-             parameterList   = False,
-             verbose         = args.verbose,
-             noTime          = args.noTime )
+             noTime          = False,
+             ignoreNan       = True,
+             verbose         = args.verbose )
 
     with dfOutput :
         display( D )
@@ -1100,11 +1082,9 @@ def CCM_():
 def SMap_():
     '''Interface for SMap()'''
 
-    D = SMap( pathIn          = '', # args.path,
-              dataFile        = '', # args.inputFile,
-              dataFrame       = dataFrameIn,
-              pathOut         = args.path,
-              predictFile     = args.outputFile,
+    D = SMap( dataFrame       = dataFrameIn,
+              columns         = args.columns,
+              target          = args.target,
               lib             = args.lib,
               pred            = args.pred,
               E               = args.E,
@@ -1113,18 +1093,12 @@ def SMap_():
               tau             = args.tau,
               theta           = args.theta,
               exclusionRadius = args.exclusionRadius,
-              columns         = args.columns,
-              target          = args.target,
-              smapCoefFile    = args.SmapCoefFile,
-              smapSVFile      = args.SmapSVFile,
               solver          = SMapSolver,
               embedded        = args.embedded,
-              verbose         = args.verbose,
-              const_pred      = False,
               validLib        = validLib,
-              generateSteps   = args.generateSteps,
-              parameterList   = False,
-              noTime          = args.noTime )
+              noTime          = args.noTime,
+              ignoreNan       = True,
+              verbose         = args.verbose )
 
     with dfOutput :
         display( D['predictions' ] )
@@ -1143,11 +1117,11 @@ def SMap_():
 def Simplex_():
     '''Interface for Simplex()'''
 
-    D = Simplex( pathIn          = '', # args.path,
-                 dataFile        = '', # args.inputFile,
-                 dataFrame       = dataFrameIn,
-                 pathOut         = args.path,
-                 predictFile     = args.outputFile,
+    print( f'Simplex_(): columns {args.columns} target {args.target}' )
+
+    D = Simplex( dataFrame       = dataFrameIn,
+                 columns         = args.columns,
+                 target          = args.target,
                  lib             = args.lib,
                  pred            = args.pred,
                  E               = args.E,
@@ -1155,15 +1129,10 @@ def Simplex_():
                  knn             = args.knn,
                  tau             = args.tau,
                  exclusionRadius = args.exclusionRadius,
-                 columns         = args.columns,
-                 target          = args.target,
                  embedded        = args.embedded,
-                 const_pred      = False,
-                 verbose         = args.verbose,
                  validLib        = validLib,
-                 generateSteps   = args.generateSteps,
-                 parameterList   = False,
-                 noTime          = args.noTime )
+                 noTime          = args.noTime,
+                 verbose         = args.verbose )
 
     with dfOutput :
         display( D )
@@ -1189,8 +1158,8 @@ def ReadCSV( filepath = None ):
             df = read_csv( filepath )
 
         #if type( df.iloc[0,0] ) is str :
-            # cppEDM handles DateTime conversion of first column
-            # jpyEDM Always passes a DataFrame, not the path/file to pyEDM/cppEDM
+            # pyEDM handles DateTime conversion of first column
+            # jpyEDM Always passes a DataFrame, not the path/file to pyEDM
             # Try to handle DateTime in first column...
             # df.iloc[:,0] = df.iloc[:,0].apply(lambda x: to_datetime(x).value)
 

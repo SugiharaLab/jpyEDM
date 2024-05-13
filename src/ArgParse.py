@@ -120,21 +120,21 @@ def ParseCmdLine():
                         default = [ 10, 80, 10 ],
                         help = 'CCM Library size range [start, stop, incr].')
 
-    parser.add_argument('-s', '--subsample',
-                        dest   = 'subsample', type = int,
+    parser.add_argument('-s', '--sample',
+                        dest   = 'sample', type = int,
                         action = 'store',      default = 100,
-                        help = 'Number subsamples generated at each library.')
+                        help = 'Number samples generated at each library.')
 
-    parser.add_argument('-R', '--random',
-                        dest   = 'random',
-                        action = 'store_true', default = False,
-                        help = 'CCM random library samples enabled.')
+    #parser.add_argument('-R', '--random',
+    #                    dest   = 'random',
+    #                    action = 'store_true', default = False,
+    #                    help = 'CCM random library samples enabled.')
 
-    parser.add_argument('-rp', '--replacement',
-                        dest   = 'replacement',
-                        action = 'store_true', default = False,
-                        help = 'CCM random library with replacement: ' +\
-                               '(False default).')
+    #parser.add_argument('-rp', '--replacement',
+    #                    dest   = 'replacement',
+    #                    action = 'store_true', default = False,
+    #                    help = 'CCM random library with replacement: ' +\
+    #                           '(False default).')
 
     parser.add_argument('-id', '--includeData',
                         dest   = 'includeData',
@@ -147,18 +147,18 @@ def ParseCmdLine():
                         action = 'store', default = 0,
                         help = 'Random number generator seed: (None default)')
 
-    parser.add_argument('-g', '--generateSteps',
-                        dest   = 'generateSteps', type = int,
-                        action = 'store', default = 0,
-                        help = 'Prediction feedback generative steps.')
+    #parser.add_argument('-g', '--generateSteps',
+    #                    dest   = 'generateSteps', type = int,
+    #                    action = 'store', default = 0,
+    #                    help = 'Prediction feedback generative steps.')
 
     parser.add_argument('-ce', '--CE',
                         dest   = 'CE', type = str, 
                         action = 'store', default = 0,
                         help = 'CE conditional embedding expression.')
 
-    parser.add_argument('-nt', '--nThreads',
-                        dest   = 'nThreads', type = int,
+    parser.add_argument('-nt', '--nProcess',
+                        dest   = 'nProcess', type = int,
                         action = 'store', default = 4,
                         help = 'Number of threads.')
 
@@ -177,25 +177,22 @@ def ParseCmdLine():
                         action = 'store',     default = '../data/Lorenz5D.csv',
                         help = 'Input observation file.')
 
-    parser.add_argument('-o', '--outputFile',
-                        dest   = 'outputFile', type = str, 
-                        action = 'store',      default = None,
-                        help = 'Output prediction file.')
-
-    parser.add_argument('-os', '--SmapCoefFile',
-                        dest   = 'SmapCoefFile', type = str,
-                        action = 'store',      default = '',
-                        help = 'S-map Coefficient output file.')
-
-    parser.add_argument('-ov', '--SmapSVFile', # Not in GUI
-                        dest   = 'SmapSVFile', type = str,
-                        action = 'store',      default = '',
-                        help = 'S-map Singular Values output file.')
-
-    parser.add_argument('-oe', '--outputEmbed',
-                        dest   = 'outputEmbed', type = str, 
-                        action = 'store',      default = None,
-                        help = 'Output embedded data file.')
+    #parser.add_argument('-o', '--outputFile',
+    #                    dest   = 'outputFile', type = str, 
+    #                    action = 'store',      default = None,
+    #                    help = 'Output prediction file.')
+    #parser.add_argument('-os', '--SmapCoefFile',
+    #                    dest   = 'SmapCoefFile', type = str,
+    #                    action = 'store',      default = '',
+    #                    help = 'S-map Coefficient output file.')
+    #parser.add_argument('-ov', '--SmapSVFile', # Not in GUI
+    #                    dest   = 'SmapSVFile', type = str,
+    #                    action = 'store',      default = '',
+    #                    help = 'S-map Singular Values output file.')
+    #parser.add_argument('-oe', '--outputEmbed',
+    #                    dest   = 'outputEmbed', type = str, 
+    #                    action = 'store',      default = None,
+    #                    help = 'Output embedded data file.')
 
     parser.add_argument('-fs', '--figureSize', nargs = 2,
                         dest   = 'figureSize', type = float,
@@ -241,6 +238,11 @@ def ParseCmdLine():
                         dest   = 'noTime',
                         action = 'store_true', default = False,
                         help = 'First data column is not time.')
+
+    parser.add_argument('-in', '--ignoreNan', # Not in GUI
+                        dest   = 'ignoreNan',
+                        action = 'store_false', default = True,
+                        help = 'ignoreNan.')
 
     parser.add_argument('-w', '--warnings',
                         dest   = 'warnings',

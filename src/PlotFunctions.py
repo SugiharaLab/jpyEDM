@@ -30,8 +30,8 @@ def PlotPredictNonlinear( df, args ):
 
     title = args.inputFile + "\nE=" + str( E )
 
-    ax = df.plot( 'Theta', 'rho', title = title, linewidth = 3 )
-    ax.set( xlabel = "S-map Localisation (θ)",
+    ax = df.plot( 'theta', 'rho', title = title, linewidth = 3 )
+    ax.set( xlabel = "S-map Localization (θ)",
             ylabel = "Prediction Skill ρ" )
 
 #----------------------------------------------------------------------------
