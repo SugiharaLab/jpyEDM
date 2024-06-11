@@ -13,6 +13,8 @@ import ipywidgets        as     widgets
 from   matplotlib.pyplot import close as pltClose # Jupyter does not close
 from   pandas            import DataFrame, read_csv, to_datetime
 from   pyEDM             import *
+from   pyEDM             import __version__     as pyEDMVersion
+from   pyEDM             import __versionDate__ as pyEDMVersionDate
 
 from IPython.core.getipython import get_ipython
 
@@ -65,13 +67,13 @@ outputTab.set_title( 1, 'Output'  )
 outputTab.set_title( 2, '2D Plot' )
 outputTab.set_title( 3, '3D Plot' )
 
-version = "Version 0.6.0 2024-05-07"
+version = "Version 0.7.0 2024-06-11" + \
+          "  pyEDM: " + pyEDMVersion + " " + pyEDMVersionDate
 
 #============================================================================
 def Version():
     with dfOutput :
-        versionString = version + "  pyEDM: " + pyEDM.__version__
-        display( print( versionString ) )
+        display( print( version ) )
 
 #============================================================================
 def RunButtonClicked( b ):
