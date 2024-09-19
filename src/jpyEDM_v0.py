@@ -49,12 +49,13 @@ sys.argv = ['Jupyter pyEDM']
 args    = ParseCmdLine()
 Widgets = OrderedDict() # Dictionary of arg names and widgets
 
-dataFrameIn    = None # Pandas DataFrame input
-dataFrameOut   = None # Output from pyEDM
-validLib       = []   # Simplex, SMap, Eval functions CE
-SMapSolver     = None # SMap
-targetCCMOrder = []   # Order of target selection
-columnCCMOrder = []   # Order of column selection
+dataFrameIn     = None # Pandas DataFrame input
+dataFrameOut    = None # Output from pyEDM
+validLib        = []   # Simplex, SMap, Eval functions CE
+SMapSolver      = None # SMap
+targetCCMOrder  = []   # Order of target selection
+columnCCMOrder  = []   # Order of column selection
+plotSelectOrder = []   # Order of column selection
 
 dfInput      = widgets.Output()
 dfOutput     = widgets.Output()
@@ -67,8 +68,9 @@ outputTab.set_title( 1, 'Output'  )
 outputTab.set_title( 2, '2D Plot' )
 outputTab.set_title( 3, '3D Plot' )
 
-version = "Version 0.7.0 2024-06-11" + \
-          "  pyEDM: " + pyEDMVersion + " " + pyEDMVersionDate
+version = "Version 0.8.0 2024-09-19" + \
+          "  pyEDM: " + pyEDMVersion + " " + pyEDMVersionDate +\
+          "  ipywidgets: " + widgets.__version__
 
 #============================================================================
 def Version():
@@ -201,6 +203,23 @@ def onTargetCCMClick( change ):
             targetCCMOrder.remove( target )
 
 #============================================================================
+def onPlotSelectClick( change ):
+    '''Save plotSelect click order into plotSelectOrder'''
+    global plotSelectOrder
+
+    if len( change['new'] ) == 1 :
+        plotSelectOrder = list( change['new'] )
+        return
+
+    for column in change['new']:
+        if column not in plotSelectOrder:
+            plotSelectOrder.append( column )
+
+    for column in plotSelectOrder:
+        if column not in change['new']:
+            plotSelectOrder.remove( column )
+
+#============================================================================
 def onSolverChange( change ):
     '''Call NewSolver'''
     NewSolver( change['new'] ) # Solver name in change['new']
@@ -263,15 +282,16 @@ def DataPlotButtonClicked( b = None ):
 
     columnList = Widgets['plotSelect'].value
 
-    if len( columnList ) == 2 :
+    if Widgets['plot_2D_3D'].value == '2D' :
         Plot2DOutput.clear_output()
         if args.scatter : kind = 'scatter'
         else :            kind = 'line'
         with Plot2DOutput :
-            display( dataFrameIn.plot( columnList[0], columnList[1],
+            display( dataFrameIn.plot( plotSelectOrder[0],
+                                       plotSelectOrder[1:],
                                        kind = kind ) )
 
-    elif len( columnList ) == 3 :
+    elif Widgets['plot_2D_3D'].value == '3D' :
         Plot3DOutput.clear_output()
         with Plot3DOutput :
             display( Plot3D( dataFrameIn, columnList, args ) )
@@ -283,30 +303,45 @@ def onFileUploadChange( b = None ):
        ==================================================================
        JP Note !!! : As of 2023-05-10 :
        FileUpload widget fails on large files (24k rows x 300 columns)
+         https://github.com/jupyter-widgets/ipywidgets/issues/2522
+         Tornado, websocket messages have a limit of 10MB
+       cosole error : Restoring connection... but no return value/error
        Use ImportButtonClicked() instead with fileImport name & read_csv
        ==================================================================
 
-       The FileUpload widget value attribute is a tuple with a dictionary 
-       for each uploaded file. The default is multiple = False :
+       The FileUpload widget changed significantly in ipywidgets 8:
+          The .value traitlet is now a list (tuple) of dictionaries,
+          rather than a dictionary mapping uploaded name to content.
+
+          The default is multiple = False :
           FileUpload( accept = ' ',  multiple = False )
-       So only one file will be returned by default in tuple[0].'''
+          So only one file will be returned by default in tuple[0].'''
 
     global dataFrameIn
 
     # Crazy unpacking of FileUpload widget return...
-    fileUploadObj = Widgets['fileUpload'].value # <class 'tuple'>
+    fileUploadObj   = Widgets['fileUpload']
+    fileUploadValue = fileUploadObj.value # <class 'tuple'>
 
-    # If fileUploadObj is a dictionary from ipywidgets < 8:
-    if isinstance( fileUploadObj, dict ):
-        fileNamekey = list( fileUploadObj.keys() )[0]
-        content     = fileUploadObj[ fileNamekey ][ 'content' ]
-    else:
-        content = fileUploadObj[0][ 'content' ]
+    if isinstance( fileUploadValue, tuple ):
+        # Take [0] since FileUpload( multiple = False )
+        content = fileUploadValue[0][ 'content' ]
+
+    elif isinstance( fileUploadValue, dict ):
+        # If fileUploadValue is dictionary from ipywidgets < 8:
+        fileNamekey = list( fileUploadValue.keys() )[0]
+        content     = fileUploadValue[ fileNamekey ][ 'content' ]
+
+    else :
+        display(print('fileUpload widget failed. Perhaps file too large. ' +\
+                      'Try manual file import with explicit file path/names'))
 
     dataFrameIn = read_csv( BytesIO( content ) )
 
+    print( f'dataFrameIn {dataFrameIn.shape} {dataFrameIn.columns[:3]}' )
+
     # Set file name in fileImport text box
-    Widgets['fileImport'].value = Widgets['fileUpload'].value[0][ 'name' ]
+    Widgets['fileImport'].value = fileUploadObj.value[0][ 'name' ]
 
     UpdateArgs()
     RefreshData()
@@ -475,7 +510,13 @@ def Dashboard():
     #                             style = {'description_width' : 'initial'} )
 
     # Label in dashboard
-    plotSelect = widgets.SelectMultiple( description='' )
+    plotSelect = widgets.SelectMultiple( description = '' )
+    # Callback function on plotSelect SelectMultiple to save click order
+    plotSelect.observe( onPlotSelectClick, names = 'value' )
+
+    plot_2D_3D = widgets.Dropdown( options = ['2D','3D'], value = '2D',
+                                   description = '2D or 3D',
+                                   layout = widgets.Layout(width='45%'))
 
     # JP FileUpload() widget does not work on large files (~50 MB)
     fileUpload = widgets.FileUpload( accept = '.csv', multiple = False )
@@ -567,6 +608,7 @@ def Dashboard():
     #Widgets['outputSmapFile'] = outputSmapFile
     #Widgets['outputEmbed']    = outputEmbed
     Widgets['plotSelect']      = plotSelect
+    Widgets['plot_2D_3D']      = plot_2D_3D
     Widgets['plot']            = plot
     Widgets['scatter']         = scatter
     Widgets['verbose']         = verbose
@@ -652,16 +694,18 @@ def DataDashboard():
 
     Widgets[ 'plotSelect' ].options = dataFrameIn.columns
 
-    # Organize widgets 
+    # Organize widgets
     left_box  = widgets.VBox( [ Widgets['method'],
-                                Widgets['dataPlotButton'],
-                                Widgets['scatter'] ] )
+                                Widgets['scatter'],
+                                Widgets['plot_2D_3D'],
+                                Widgets['dataPlotButton'] ] )
     
     mid_box   = widgets.VBox( [ widgets.Label( 'Plot Columns:' ),
                                 Widgets['plotSelect'] ] )
     
-    right_box = widgets.VBox( [ Widgets['fileUpload'], # fails large files
-                                widgets.Label( 'File:' ),
+    right_box = widgets.VBox( [ widgets.Label( 'Upload files < 10MB:' ),
+                                Widgets['fileUpload'],
+                                widgets.Label( 'Manual Import files > 10MB:' ),
                                 widgets.HBox( [ Widgets['fileImport'] ] ),
                                 Widgets['importButton'] ] )
 
