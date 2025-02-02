@@ -147,10 +147,10 @@ def ParseCmdLine():
                         action = 'store', default = 0,
                         help = 'Random number generator seed: (None default)')
 
-    #parser.add_argument('-g', '--generateSteps',
-    #                    dest   = 'generateSteps', type = int,
-    #                    action = 'store', default = 0,
-    #                    help = 'Prediction feedback generative steps.')
+    parser.add_argument('-g', '--generateSteps',
+                        dest   = 'generateSteps', type = int,
+                        action = 'store', default = 0,
+                        help = 'Prediction feedback generative steps.')
 
     parser.add_argument('-ce', '--CE',
                         dest   = 'CE', type = str, 
@@ -196,7 +196,7 @@ def ParseCmdLine():
 
     parser.add_argument('-fs', '--figureSize', nargs = 2,
                         dest   = 'figureSize', type = float,
-                        action = 'store', default = [ 4, 2.5 ],
+                        action = 'store', default = [ 4., 2.5 ],
                         help = 'Figure size (default [5, 3]).')
 
     parser.add_argument('-P', '--plot',

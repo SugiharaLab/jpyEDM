@@ -108,22 +108,42 @@ def PlotObsPred_( df, args ):
 #----------------------------------------------------------------------------
 # 
 #----------------------------------------------------------------------------
-def PlotCoeff_( df, args ):
+def PlotSMap( D, args ):
+
+    pred = D['predictions']
+    coef = D['coefficients']
+
+    # stats: {'MAE': 0., 'RMSE': 0., 'rho': 0. }
+    stats = ComputeError( pred['Observations'], pred['Predictions' ] )
 
     if args.embedded :
         E = len( args.columns )
     else :
         E = args.E
 
+    #---------------------------------------------------------------
+    # Predictions
     title = args.inputFile + "\nE=" + str( E ) + " Tp=" + str( args.Tp ) +\
-            "  S-Map Coefficients"
+            " θ=" + str( round( args.theta, 2 ) ) +\
+            "  ρ="   + str( round( stats['rho'],  2 ) ) +\
+            " RMSE=" + str( round( stats['RMSE'], 2 ) )
 
-    time_col = df.columns[0]
+    pred.plot( pred.columns[0], ['Observations', 'Predictions'],
+               title = title, linewidth = 3 )
+    plt.show()
+
+    #---------------------------------------------------------------
+    # Coefficients
+    title = args.inputFile + "\nE=" + str( E ) + " Tp=" + str( args.Tp ) +\
+            " θ=" + str( round( args.theta, 2 ) ) + "  S-Map Coefficients"
+
+    time_col = coef.columns[0]
     # Coefficient columns can be in any column
-    coef_cols = [ x for x in df.columns if time_col not in x ]
+    coef_cols = [ x for x in coef.columns if time_col not in x ]
 
-    df.plot( time_col, coef_cols, title = title, linewidth = 3,
-             subplots = True )
+    coef.plot( time_col, coef_cols,
+               title = title, linewidth = 3, subplots = True )
+    plt.show()
 
 #----------------------------------------------------------------------------
 #

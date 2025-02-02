@@ -10,7 +10,8 @@ from   time        import sleep
 from   IPython.display   import display
 from   IPython.display   import clear_output as clearDashboard
 import ipywidgets        as     widgets
-from   matplotlib.pyplot import close as pltClose # Jupyter does not close
+from   matplotlib        import pyplot as plt # Explicit plt.show in Output
+
 from   pandas            import DataFrame, read_csv, to_datetime
 from   pyEDM             import *
 from   pyEDM             import __version__     as pyEDMVersion
@@ -57,6 +58,8 @@ targetCCMOrder  = []   # Order of target selection
 columnCCMOrder  = []   # Order of column selection
 plotSelectOrder = []   # Order of column selection
 
+dashboard = widgets.VBox() # [ argumentWidgets, controlWidgets, outputTab ]
+
 dfInput      = widgets.Output()
 dfOutput     = widgets.Output()
 Plot2DOutput = widgets.Output()
@@ -68,7 +71,7 @@ outputTab.set_title( 1, 'Output'  )
 outputTab.set_title( 2, '2D Plot' )
 outputTab.set_title( 3, '3D Plot' )
 
-version = "Version 0.8.0 2024-09-19" + \
+version = "Version 0.9.0 2025-02-07" + \
           "  pyEDM: " + pyEDMVersion + " " + pyEDMVersionDate +\
           "  ipywidgets: " + widgets.__version__
 
@@ -139,8 +142,8 @@ def RunButtonClicked( b ):
 #============================================================================
 def onMethodChange( change ):
     '''Refresh dashboard according to method Dropdown widget value'''
-    newMethod = change['new']
 
+    newMethod = change['new']
     clearDashboard()
     dfOutput.clear_output()    
     UpdateArgs()
@@ -277,7 +280,7 @@ def NewSolver( newSolver ):
 def DataPlotButtonClicked( b = None ):
     '''Explicitly call Data or Embed Plots'''
 
-    pltClose() # Jupyter calls plt.show, but not close?
+    plt.close('all') # Jupyter calls plt.show, but not close
     UpdateArgs()
 
     columnList = Widgets['plotSelect'].value
@@ -287,14 +290,16 @@ def DataPlotButtonClicked( b = None ):
         if args.scatter : kind = 'scatter'
         else :            kind = 'line'
         with Plot2DOutput :
-            display( dataFrameIn.plot( plotSelectOrder[0],
-                                       plotSelectOrder[1:],
-                                       kind = kind ) )
+            dataFrameIn.plot(plotSelectOrder[0], plotSelectOrder[1:], kind=kind)
+            plt.show()
+        display( Plot2DOutput )
 
     elif Widgets['plot_2D_3D'].value == '3D' :
         Plot3DOutput.clear_output()
         with Plot3DOutput :
-            display( Plot3D( dataFrameIn, columnList, args ) )
+            Plot3D( dataFrameIn, columnList, args )
+            plt.show()
+        display( Plot3DOutput )
 
 #============================================================================
 def onFileUploadChange( b = None ):
@@ -333,12 +338,15 @@ def onFileUploadChange( b = None ):
         content     = fileUploadValue[ fileNamekey ][ 'content' ]
 
     else :
-        display(print('fileUpload widget failed. Perhaps file too large. ' +\
-                      'Try manual file import with explicit file path/names'))
+        with dfOutput :
+            display(print('fileUpload widget failed. Perhaps file too large. '+\
+                          'Try manual file import with explicit file path'))
 
     dataFrameIn = read_csv( BytesIO( content ) )
 
-    print( f'dataFrameIn {dataFrameIn.shape} {dataFrameIn.columns[:3]}' )
+    with dfOutput :
+        print( 'fileUpload dataFrameIn ' +\
+               f'{dataFrameIn.shape} {dataFrameIn.columns[:3]}' )
 
     # Set file name in fileImport text box
     Widgets['fileImport'].value = fileUploadObj.value[0][ 'name' ]
@@ -409,7 +417,6 @@ def Dashboard():
                                          'Mutual Information',
                                          'Data' ],
                                value='Data', description='method' )
-
     # Callback function on method Dropdown to change dashboard
     method.observe( onMethodChange, names = 'value' )
 
@@ -477,8 +484,8 @@ def Dashboard():
     # Callback function on l1_ratio to instantiate solver
     l1_ratio.observe( onL1_ratioChange, names = 'value' )
     
-    #generateSteps = widgets.IntText( value=0, description='generate',
-    #                                 layout = widgets.Layout(width='50%') )
+    generateSteps = widgets.IntText( value=0, description='generate',
+                                     layout = widgets.Layout(width='50%') )
 
     CE = widgets.Text( value='', description='CE' )
 
@@ -518,11 +525,11 @@ def Dashboard():
                                    description = '2D or 3D',
                                    layout = widgets.Layout(width='45%'))
 
-    # JP FileUpload() widget does not work on large files (~50 MB)
+    # JP FileUpload() widget does not work on large files (>10 MB)
     fileUpload = widgets.FileUpload( accept = '.csv', multiple = False )
-    #   Callback function on fileUpload
+    # Callback function on fileUpload
     fileUpload.observe( onFileUploadChange, names = 'value' )
-    
+
     # JP Instead, read file name from fileImport TextBox
     # Callback function is on ImportButtonClicked to load fileUpload.value
     fileImport = widgets.Text( value='', description='', # Label in dashboard
@@ -591,7 +598,7 @@ def Dashboard():
     Widgets['columnCCM']       = columnCCM
     Widgets['targetCCM']       = targetCCM
     Widgets['embedded']        = embedded
-    #Widgets['generateSteps']   = generateSteps
+    Widgets['generateSteps']   = generateSteps
     Widgets['CE']              = CE
     Widgets['multiview']       = multiview
     Widgets['trainLib']        = trainLib
@@ -651,10 +658,9 @@ def UpdateArgs():
     args.trainLib        = Widgets['trainLib'].value
     args.excludeTarget   = Widgets['excludeTarget'].value
     args.embedded        = Widgets['embedded'].value
-
-    #args.generateSteps   = Widgets['generateSteps'].value
-    #if args.generateSteps < 0 :
-    #    args.generateSteps = Widgets['generateSteps'].value = 0
+    args.generateSteps   = Widgets['generateSteps'].value
+    if args.generateSteps < 0 :
+        args.generateSteps = Widgets['generateSteps'].value = 0
 
     args.CE              = Widgets['CE'].value
     #args.libSize        = [ int(x) for x in Widgets['libsize'].value.split() ]
@@ -685,7 +691,8 @@ def RenderDashboard( left_box, mid_box, right_box ):
 
     controlWidgets  = widgets.HBox([ Widgets['runButton'], Widgets['running'] ])
     argumentWidgets = widgets.HBox( [ left_box, mid_box, right_box ] )
-    dashboard = widgets.VBox( [ argumentWidgets, controlWidgets, outputTab ] )
+    dashboard.children = [ argumentWidgets, controlWidgets, outputTab ]
+
     display( dashboard )
 
 #============================================================================
@@ -854,7 +861,7 @@ def SMapDashboard():
     mid_box   = widgets.VBox( [ Widgets['theta'], Widgets['E'], Widgets['Tp'],
                                 Widgets['tau'],   Widgets['knn'],
                                 Widgets['exclusionRadius'],
-                                Widgets['CE'] # , Widgets['generateSteps']
+                                Widgets['CE'],    Widgets['generateSteps']
                                ] )
 
     right_box = widgets.VBox( [ # Widgets['outputFile'],
@@ -875,7 +882,7 @@ def SimplexDashboard():
     mid_box   = widgets.VBox( [ Widgets['E'],   Widgets['Tp'],
                                 Widgets['tau'], Widgets['knn'],
                                 Widgets['exclusionRadius'],
-                                Widgets['CE'] #,  Widgets['generateSteps']
+                                Widgets['CE'],  Widgets['generateSteps']
                                ] )
 
     right_box = widgets.VBox( [ #Widgets['outputFile'],
@@ -896,7 +903,7 @@ def ViewData():
         DataPlotButtonClicked()
 
 #============================================================================
-@dfOutput.capture() # Decorator
+# @dfOutput.capture() # Decorator : Not used : Explicit Output context used
 def MutualInfo():
     '''Mutual Information on lagged columns : target'''
     D = MI_tau( args, dataFrameIn )
@@ -905,15 +912,17 @@ def MutualInfo():
         display( D )
 
     if args.plot :
-        pltClose()
+        plt.close('all')
         Plot2DOutput.clear_output()
         with Plot2DOutput :
-            display( PlotMutualInfo( D, args ) )
+            PlotMutualInfo( D, args )
+            plt.show()
+        display( Plot2DOutput )
 
     return D
 
 #============================================================================
-@dfOutput.capture() # Decorator
+# @dfOutput.capture() # Decorator : Not used : Explicit Output context used
 def Embed_():
     '''Interface for Embed()'''
 
@@ -932,24 +941,28 @@ def Embed_():
         display( D )
 
     if args.plot :
-        pltClose() # WTH? Jupyter calls plt.show, but not close?
+        plt.close('all') # Jupyter calls plt.show, but not close
 
         columnList = Widgets['plotSelect'].value
 
         if len( columnList ) == 2 :
             Plot2DOutput.clear_output()
             with Plot2DOutput :
-                display( D.plot( columnList[0], columnList[1] ) )
+                D.plot( columnList[0], columnList[1] )
+                plt.show()
+            display( Plot2DOutput )
 
         elif len( columnList ) == 3 :
             Plot3DOutput.clear_output()
             with Plot3DOutput :
-                display( Plot3D( D, columnList, args ) )
+                Plot3D( D, columnList, args )
+                plt.show()
+            display( Plot3DOutput )
 
     return D
 
 #============================================================================
-@dfOutput.capture() # Decorator
+#@dfOutput.capture() # Decorator: Not used : Explicit Output context used
 def EmbedDimension_():
     '''Interface for EmbedDimension()'''
 
@@ -974,15 +987,17 @@ def EmbedDimension_():
         display( D )
 
     if args.plot :
-        pltClose()
+        plt.close('all')
         Plot2DOutput.clear_output()
         with Plot2DOutput :
-            display( PlotEmbedDimension( D, args ) )
+            PlotEmbedDimension( D, args )
+            plt.show()
+        display( Plot2DOutput )
 
     return D
 
 #============================================================================
-@dfOutput.capture() # Decorator
+#@dfOutput.capture() # Decorator: Not used : Explicit Output context used
 def PredictInterval_():
     '''Interface for PredictInterval()'''
 
@@ -1007,15 +1022,17 @@ def PredictInterval_():
         display( D )
 
     if args.plot :
-        pltClose()
+        plt.close('all')
         Plot2DOutput.clear_output()
         with Plot2DOutput :
-            display( PlotPredictInterval( D, args ) )
+            PlotPredictInterval( D, args )
+            plt.show()
+        display( Plot2DOutput )
 
     return D
 
 #============================================================================
-@dfOutput.capture() # Decorator
+#@dfOutput.capture() # Decorator: Not used : Explicit Output context used
 def PredictNonlinear_():
     '''Interface for PredictNonlinear()'''
 
@@ -1043,15 +1060,17 @@ def PredictNonlinear_():
         display( D )
 
     if args.plot :
-        pltClose()
+        plt.close('all')
         Plot2DOutput.clear_output()
         with Plot2DOutput :
-            display( PlotPredictNonlinear( D, args ) )
+            PlotPredictNonlinear( D, args )
+            plt.show()
+        display( Plot2DOutput )
 
     return D
 
 #============================================================================
-@dfOutput.capture() # Decorator
+#@dfOutput.capture() # Decorator: Not used : Explicit Output context used
 def Multiview_():
     '''Interface for Multiview()'''
 
@@ -1084,14 +1103,17 @@ def Multiview_():
         display( D[ 'View' ] )
 
     if args.plot :
-        pltClose()
+        plt.close('all')
         Plot2DOutput.clear_output()
         with Plot2DOutput :
-            display( PlotObsPred_( D[ 'Predictions' ], args ) )
+            PlotObsPred_( D[ 'Predictions' ], args )
+            plt.show()
+        display( Plot2DOutput )
+
     return D
 
 #============================================================================
-@dfOutput.capture() # Decorator
+#@dfOutput.capture() # Decorator: Not used : Explicit Output context used
 def CCM_():
     '''Interface for CCM()'''
 
@@ -1116,15 +1138,17 @@ def CCM_():
         display( D )
 
     if args.plot :
-        pltClose()
+        plt.close('all')
         Plot2DOutput.clear_output()
         with Plot2DOutput :
-            display( PlotCCM( D, args ) )
+            PlotCCM( D, args )
+            plt.show()
+        display( Plot2DOutput )
 
     return D
 
 #============================================================================
-@dfOutput.capture() # Decorator
+#@dfOutput.capture() # Decorator: Not used : Explicit Output context used
 def SMap_():
     '''Interface for SMap()'''
 
@@ -1150,20 +1174,18 @@ def SMap_():
         display( D['predictions' ] )
 
     if args.plot :
-        pltClose()
+        plt.close('all')
         Plot2DOutput.clear_output()
         with Plot2DOutput :
-            display( PlotObsPred_( D['predictions' ], args ) )
-            display( PlotCoeff_  ( D['coefficients'], args ) )
+            PlotSMap( D, args ) # PlotSMap() calls plt.show()
+        display( Plot2DOutput )
 
     return D
 
 #============================================================================
-@dfOutput.capture() # Decorator
+#@dfOutput.capture() # Decorator: Not used : Explicit Output context used
 def Simplex_():
     '''Interface for Simplex()'''
-
-    print( f'Simplex_(): columns {args.columns} target {args.target}' )
 
     D = Simplex( dataFrame       = dataFrameIn,
                  columns         = args.columns,
@@ -1184,10 +1206,12 @@ def Simplex_():
         display( D )
 
     if args.plot :
-        pltClose()
+        plt.close('all')
         Plot2DOutput.clear_output()
         with Plot2DOutput :
-            display( PlotObsPred_( D, args ) )
+            PlotObsPred_( D, args )
+            plt.show()
+        display( Plot2DOutput )
 
     return D
 

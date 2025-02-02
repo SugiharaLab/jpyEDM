@@ -20,7 +20,7 @@ It can be installed from the command line using the Python pip module: `python -
 ### Jupyter notebook
 Download the jpyEDM source.  
 Start Jupyter notebook.  
-Open `"jpyEDM/notebooks/pyEDM Version 0.ipynb"`.
+Open `"jpyEDM/notebooks/jpyEDM-0.9.ipynb"`.
 
 ---
 ## Introduction
