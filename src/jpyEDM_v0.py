@@ -71,7 +71,7 @@ outputTab.set_title( 1, 'Output'  )
 outputTab.set_title( 2, '2D Plot' )
 outputTab.set_title( 3, '3D Plot' )
 
-version = "Version 0.9.0 2025-02-07" + \
+version = "Version 0.9.1 2025-02-07" + \
           "  pyEDM: " + pyEDMVersion + " " + pyEDMVersionDate +\
           "  ipywidgets: " + widgets.__version__
 
@@ -483,7 +483,7 @@ def Dashboard():
                              layout = widgets.Layout(width='90%') )
     # Callback function on l1_ratio to instantiate solver
     l1_ratio.observe( onL1_ratioChange, names = 'value' )
-    
+
     generateSteps = widgets.IntText( value=0, description='generate',
                                      layout = widgets.Layout(width='50%') )
 
@@ -563,6 +563,11 @@ def Dashboard():
                                       indent = False, 
                                       layout = widgets.Layout(width='60%') )
 
+    generateConcat = widgets.Checkbox( value = False,
+                                       description = 'generateConcat',
+                                       indent = False, 
+                                       layout = widgets.Layout(width='100%') )
+
     running = widgets.Checkbox( value = False, description='Running',
                                 indent = False, 
                                 layout = widgets.Layout(width='60%') )
@@ -599,6 +604,7 @@ def Dashboard():
     Widgets['targetCCM']       = targetCCM
     Widgets['embedded']        = embedded
     Widgets['generateSteps']   = generateSteps
+    Widgets['generateConcat']  = generateConcat
     Widgets['CE']              = CE
     Widgets['multiview']       = multiview
     Widgets['trainLib']        = trainLib
@@ -662,6 +668,7 @@ def UpdateArgs():
     if args.generateSteps < 0 :
         args.generateSteps = Widgets['generateSteps'].value = 0
 
+    args.generateConcat  = Widgets['generateConcat'].value
     args.CE              = Widgets['CE'].value
     #args.libSize        = [ int(x) for x in Widgets['libsize'].value.split() ]
     args.libSize         = Widgets['libsize'].value
@@ -865,8 +872,8 @@ def SMapDashboard():
                                ] )
 
     right_box = widgets.VBox( [ # Widgets['outputFile'],
-                                Widgets['plot'],       Widgets['embedded'],
-                                Widgets['verbose'] ] )
+                                Widgets['plot'],    Widgets['embedded'],
+                                Widgets['verbose'], Widgets['generateConcat'] ] )
 
     RenderDashboard( left_box, mid_box, right_box )
 
@@ -886,8 +893,8 @@ def SimplexDashboard():
                                ] )
 
     right_box = widgets.VBox( [ #Widgets['outputFile'],
-                                Widgets['plot'],       Widgets['embedded'],
-                                Widgets['verbose'] ] )
+                                Widgets['plot'],    Widgets['embedded'],
+                                Widgets['verbose'], Widgets['generateConcat'] ] )
 
     RenderDashboard( left_box, mid_box, right_box )
 
@@ -1167,6 +1174,8 @@ def SMap_():
               embedded        = args.embedded,
               validLib        = validLib,
               noTime          = args.noTime,
+              generateSteps   = args.generateSteps,
+              generateConcat  = args.generateConcat,
               ignoreNan       = True,
               verbose         = args.verbose )
 
@@ -1200,6 +1209,8 @@ def Simplex_():
                  embedded        = args.embedded,
                  validLib        = validLib,
                  noTime          = args.noTime,
+                 generateSteps   = args.generateSteps,
+                 generateConcat  = args.generateConcat,
                  verbose         = args.verbose )
 
     with dfOutput :

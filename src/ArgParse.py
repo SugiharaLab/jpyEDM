@@ -152,6 +152,11 @@ def ParseCmdLine():
                         action = 'store', default = 0,
                         help = 'Prediction feedback generative steps.')
 
+    parser.add_argument('-gc', '--generateConcat',
+                        dest   = 'generateConcat',
+                        action = 'store_true', default = False,
+                        help = 'Prepend observations to generated')
+
     parser.add_argument('-ce', '--CE',
                         dest   = 'CE', type = str, 
                         action = 'store', default = 0,
