@@ -46,7 +46,7 @@ from src.PlotFunctions   import *
 # on invalid arguments from the IPython/Jupyter invocation
 sys.argv = ['Jupyter pyEDM']
 
-# Globals # JP: OO would get rid of these, but they are in EDM namespace
+# Globals # JP: OO would get rid of these, at least they are in EDM namespace
 args    = ParseCmdLine()
 Widgets = OrderedDict() # Dictionary of arg names and widgets
 
@@ -71,7 +71,7 @@ outputTab.set_title( 1, 'Output'  )
 outputTab.set_title( 2, '2D Plot' )
 outputTab.set_title( 3, '3D Plot' )
 
-version = "Version 0.9.1 2025-02-07" + \
+version = "Version 0.9.1 2025-02-05" + \
           "  pyEDM: " + pyEDMVersion + " " + pyEDMVersionDate +\
           "  ipywidgets: " + widgets.__version__
 
@@ -136,6 +136,8 @@ def RunButtonClicked( b ):
         Plot3DOutput.clear_output()
         with Plot3DOutput :
             display( print( error ) )
+
+        Widgets['running'].value = False
 
     Widgets['running'].value = False
 
@@ -537,43 +539,47 @@ def Dashboard():
 
     # Checkbox ----------------------------------------------------------
     plot = widgets.Checkbox( value = True, description='plot',
-                             indent = False, 
-                             layout = widgets.Layout(width='60%') )
+                             indent = False,
+                             layout = widgets.Layout(width='80%') )
 
     scatter = widgets.Checkbox( value = False, description='scatter plot',
                                 indent = False,
                                 layout = widgets.Layout(width='60%') )
 
     trainLib = widgets.Checkbox( value = True, description='trainLib',
-                                 indent = False, 
+                                 indent = False,
                                  layout = widgets.Layout(width='60%') )
 
     embedded = widgets.Checkbox( value = False, description='embedded',
-                                 indent = False, 
+                                 indent = False,
                                  layout = widgets.Layout(width='100%') )
 
+    noTime = widgets.Checkbox( value = False, description='noTime',
+                               indent = False,
+                               layout = widgets.Layout(width='100%') )
+
     #randomLib = widgets.Checkbox( value = True, description='randomLib',
-    #                              indent = False, 
+    #                              indent = False,
     #                              layout = widgets.Layout(width='60%') )
     #replacement = widgets.Checkbox( value = False, description='replacement',
-    #                                indent = False, 
+    #                                indent = False,
     #                                layout = widgets.Layout(width='60%') )
 
     excludeTarget = widgets.Checkbox( value = False, description='excludeTarget',
-                                      indent = False, 
+                                      indent = False,
                                       layout = widgets.Layout(width='60%') )
 
     generateConcat = widgets.Checkbox( value = False,
                                        description = 'generateConcat',
-                                       indent = False, 
+                                       indent = False,
                                        layout = widgets.Layout(width='100%') )
 
     running = widgets.Checkbox( value = False, description='Running',
-                                indent = False, 
+                                indent = False,
                                 layout = widgets.Layout(width='60%') )
 
     verbose = widgets.Checkbox( value = False, description='verbose',
-                                indent = False, 
+                                indent = False,
                                 layout = widgets.Layout(width='100%') )
 
     # Populate global dictionary of widgets
@@ -611,6 +617,7 @@ def Dashboard():
     Widgets['excludeTarget']   = excludeTarget
     Widgets['libsize']         = libsize
     Widgets['sample']          = sample
+    Widgets['noTime']          = noTime
     #Widgets['randomLib']      = randomLib
     #Widgets['replacement']    = replacement
     Widgets['seed']            = seed
@@ -673,6 +680,7 @@ def UpdateArgs():
     #args.libSize        = [ int(x) for x in Widgets['libsize'].value.split() ]
     args.libSize         = Widgets['libsize'].value
     args.sample          = Widgets['sample'].value
+    args.noTime          = Widgets['noTime'].value
     #args.random         = Widgets['randomLib'].value
     #args.replacement    = Widgets['replacement'].value
     args.seed            = Widgets['seed'].value
@@ -769,8 +777,8 @@ def PredictNonlinearDashboard():
                                 Widgets['exclusionRadius'], Widgets['CE'] ] )
 
     right_box = widgets.VBox( [ #Widgets['outputFile'],
-                                Widgets['nProcess'],   Widgets['plot'],
-                                Widgets['embedded'] ,
+                                Widgets['nProcess'], Widgets['plot'],
+                                Widgets['embedded'], Widgets['noTime'],
                                 Widgets['verbose'] ] )
 
     RenderDashboard( left_box, mid_box, right_box )
@@ -789,8 +797,9 @@ def PredictIntervalDashboard():
                                 Widgets['exclusionRadius'], Widgets['CE'] ] )
 
     right_box = widgets.VBox( [ #Widgets['outputFile'],
-                                Widgets['nProcess'],   Widgets['plot'],
-                                Widgets['embedded'],   Widgets['verbose'] ] )
+                                Widgets['nProcess'], Widgets['plot'],
+                                Widgets['embedded'], Widgets['noTime'],
+                                Widgets['verbose'] ] )
 
     RenderDashboard( left_box, mid_box, right_box )
 
@@ -808,8 +817,8 @@ def EmbedDimensionDashboard():
                                 Widgets['exclusionRadius'], Widgets['CE'] ] )
 
     right_box = widgets.VBox( [ #Widgets['outputFile'],
-                                Widgets['nProcess'],   Widgets['plot'],
-                                Widgets['verbose'] ] )
+                                Widgets['nProcess'], Widgets['plot'],
+                                Widgets['noTime'],   Widgets['verbose'] ] )
 
     RenderDashboard( left_box, mid_box, right_box )
 
@@ -848,9 +857,9 @@ def CCMDashboard():
                                 Widgets['sample'] ] )
 
     right_box = widgets.VBox( [ # Widgets['outputFile'],
-                                Widgets['plot'],        Widgets['embedded'],
+                                Widgets['plot'],   Widgets['embedded'],
                                 # Widgets['replacement'], Widgets['randomLib'],
-                                Widgets['verbose'] ] )
+                                Widgets['noTime'], Widgets['verbose'] ] )
 
     RenderDashboard( left_box, mid_box, right_box )
 
@@ -872,8 +881,9 @@ def SMapDashboard():
                                ] )
 
     right_box = widgets.VBox( [ # Widgets['outputFile'],
-                                Widgets['plot'],    Widgets['embedded'],
-                                Widgets['verbose'], Widgets['generateConcat'] ] )
+                                Widgets['plot'],   Widgets['embedded'],
+                                Widgets['noTime'], Widgets['generateConcat'],
+                                Widgets['verbose'] ] )
 
     RenderDashboard( left_box, mid_box, right_box )
 
@@ -893,8 +903,9 @@ def SimplexDashboard():
                                ] )
 
     right_box = widgets.VBox( [ #Widgets['outputFile'],
-                                Widgets['plot'],    Widgets['embedded'],
-                                Widgets['verbose'], Widgets['generateConcat'] ] )
+                                Widgets['plot'],   Widgets['embedded'],
+                                Widgets['noTime'], Widgets['generateConcat'],
+                                Widgets['verbose'] ] )
 
     RenderDashboard( left_box, mid_box, right_box )
 

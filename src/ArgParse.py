@@ -239,7 +239,7 @@ def ParseCmdLine():
                         action = 'store_true', default = False,
                         help = 'Print status messages.')
 
-    parser.add_argument('-nT', '--noTime', # Not in GUI
+    parser.add_argument('-nT', '--noTime',
                         dest   = 'noTime',
                         action = 'store_true', default = False,
                         help = 'First data column is not time.')
