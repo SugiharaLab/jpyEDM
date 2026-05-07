@@ -71,7 +71,7 @@ outputTab.set_title( 1, 'Output'  )
 outputTab.set_title( 2, '2D Plot' )
 outputTab.set_title( 3, '3D Plot' )
 
-version = "Version 0.9.1 2025-02-05" + \
+version = "Version 0.9.2 2026-05-07" + \
           "  pyEDM: " + pyEDMVersion + " " + pyEDMVersionDate +\
           "  ipywidgets: " + widgets.__version__
 
@@ -1149,7 +1149,8 @@ def CCM_():
              embedded        = args.embedded,
              includeData     = args.includeData,
              noTime          = False,
-             ignoreNan       = True,
+             mpMethod        = None,   # Needs interface
+             sharedMB        = 0.01,   # Needs interface
              verbose         = args.verbose )
 
     with dfOutput :
