@@ -12,7 +12,7 @@ from   IPython.display   import clear_output as clearDashboard
 import ipywidgets        as     widgets
 from   matplotlib        import pyplot as plt # Explicit plt.show in Output
 
-from   pandas            import DataFrame, read_csv, to_datetime
+from   pandas            import DataFrame, read_csv, read_feather, to_datetime
 from   pyEDM             import *
 from   pyEDM             import __version__     as pyEDMVersion
 from   pyEDM             import __versionDate__ as pyEDMVersionDate
@@ -71,7 +71,7 @@ outputTab.set_title( 1, 'Output'  )
 outputTab.set_title( 2, '2D Plot' )
 outputTab.set_title( 3, '3D Plot' )
 
-version = "Version 0.9.2 2026-05-07" + \
+version = "Version 0.9.3 2026-05-15" + \
           "  pyEDM: " + pyEDMVersion + " " + pyEDMVersionDate +\
           "  ipywidgets: " + widgets.__version__
 
@@ -332,7 +332,8 @@ def onFileUploadChange( b = None ):
 
     if isinstance( fileUploadValue, tuple ):
         # Take [0] since FileUpload( multiple = False )
-        content = fileUploadValue[0][ 'content' ]
+        fileNamekey = fileUploadValue[0][ 'name' ]
+        content     = fileUploadValue[0][ 'content' ]
 
     elif isinstance( fileUploadValue, dict ):
         # If fileUploadValue is dictionary from ipywidgets < 8:
@@ -344,11 +345,17 @@ def onFileUploadChange( b = None ):
             display(print('fileUpload widget failed. Perhaps file too large. '+\
                           'Try manual file import with explicit file path'))
 
-    dataFrameIn = read_csv( BytesIO( content ) )
+    if ".csv" in fileNamekey[-4:] :
+        dataFrameIn = read_csv( BytesIO( content ) )
+    elif ".feather" in fileNamekey[-8:] :
+        dataFrameIn = read_feather( BytesIO( content ) )
+    else :
+        with dfOutput :
+            display(print('fileUpload requires .csv or .feather'))
 
     with dfOutput :
-        print( 'fileUpload dataFrameIn ' +\
-               f'{dataFrameIn.shape} {dataFrameIn.columns[:3]}' )
+        display(print('fileUpload dataFrameIn ' +\
+                      f'{dataFrameIn.shape} {dataFrameIn.columns[:3]}'))
 
     # Set file name in fileImport text box
     Widgets['fileImport'].value = fileUploadObj.value[0][ 'name' ]
@@ -366,8 +373,15 @@ def ImportButtonClicked( b ):
     global dataFrameIn
 
     # JP Workaround for FileUpload widget fails on large files
-    fileName    = Widgets['fileImport'].value
-    dataFrameIn = read_csv( fileName )
+    fileName = Widgets['fileImport'].value
+
+    if ".csv" in fileName[-4:] :
+        dataFrameIn = read_csv( fileName )
+    elif ".feather" in fileName[-8:] :
+        dataFrameIn = read_feather( fileName )
+    else :
+        with dfOutput :
+            display(print('ImportButtonClicked file must be .csv or .feather'))
 
     RefreshData()
 
@@ -528,7 +542,9 @@ def Dashboard():
                                    layout = widgets.Layout(width='45%'))
 
     # JP FileUpload() widget does not work on large files (>10 MB)
-    fileUpload = widgets.FileUpload( accept = '.csv', multiple = False )
+    # Crazy "accept" parameter violates PEP20 for multiple values
+    fileUpload = widgets.FileUpload( accept = '.csv,.feather',
+                                     multiple = False )
     # Callback function on fileUpload
     fileUpload.observe( onFileUploadChange, names = 'value' )
 
@@ -636,7 +652,7 @@ def Dashboard():
 
     # Load initial data
     global dataFrameIn
-    dataFrameIn = ReadCSV( args.inputFile ) 
+    dataFrameIn = ReadCSV( args.inputFile ) # Default in ArgParse()
     RefreshData()
 
     DataDashboard() # Default start up
@@ -691,7 +707,7 @@ def UpdateArgs():
     if args.nProcess < 1 :
         args.nProcess = Widgets['nProcess'].value = 1
 
-    args.inputFile       = '' # fileUpload / Import directly assigns dataFrameIn
+    args.inputFile       = '' # ReadCSV() inputFile to dataFrameIn
     #args.outputFile     = Widgets['outputFile'].value
     #args.outputSmapFile = Widgets['outputSmapFile'].value
     #args.outputEmbed    = Widgets['outputEmbed'].value
@@ -1240,7 +1256,7 @@ def Simplex_():
 
 #============================================================================
 def ReadCSV( filepath = None ):
-    '''Interface for read_csv() in pandas'''
+    '''Interface for read_csv() in pandas called from Dashboard()'''
     df = DataFrame()
 
     try:
