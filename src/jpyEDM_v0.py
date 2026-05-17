@@ -71,7 +71,7 @@ outputTab.set_title( 1, 'Output'  )
 outputTab.set_title( 2, '2D Plot' )
 outputTab.set_title( 3, '3D Plot' )
 
-version = "Version 0.9.3 2026-05-15" + \
+version = "Version 0.9.4 2026-05-17" + \
           "  pyEDM: " + pyEDMVersion + " " + pyEDMVersionDate +\
           "  ipywidgets: " + widgets.__version__
 

@@ -14,7 +14,8 @@ from   pyEDM                import ComputeError
 def PlotEmbedDimension( df, args ):
     title = args.inputFile + "\nTp=" + str(args.Tp)
 
-    ax = df.plot( 'E', 'rho', title = title, linewidth = 3 )
+    ax = df.plot( 'E', 'rho', title = title, linewidth = 3,
+                  label = f'{args.columns} : {args.target}' )
     ax.set( xlabel = "Embedding Dimension",
             ylabel = "Prediction Skill ρ" )
 
@@ -30,7 +31,8 @@ def PlotPredictNonlinear( df, args ):
 
     title = args.inputFile + "\nE=" + str( E )
 
-    ax = df.plot( 'theta', 'rho', title = title, linewidth = 3 )
+    ax = df.plot( 'theta', 'rho', title = title, linewidth = 3,
+                  label = f'{args.columns} : {args.target}'  )
     ax.set( xlabel = "S-map Localization (θ)",
             ylabel = "Prediction Skill ρ" )
 
@@ -46,7 +48,8 @@ def PlotPredictInterval( df, args ):
 
     title = args.inputFile + "\nE=" + str( E )
 
-    ax = df.plot( 'Tp', 'rho', title = title, linewidth = 3 )
+    ax = df.plot( 'Tp', 'rho', title = title, linewidth = 3,
+                  label = f'{args.columns} : {args.target}' )
     ax.set( xlabel = "Forecast Interval",
             ylabel = "Prediction Skill ρ" )
 
@@ -102,8 +105,10 @@ def PlotObsPred_( df, args ):
             "  ρ="   + str( round( stats['rho'],  2 ) ) +\
             " RMSE=" + str( round( stats['RMSE'], 2 ) )
 
-    df.plot( df.columns[0], ['Observations', 'Predictions'],
-             title = title, linewidth = 3 )
+    ax = df.plot( df.columns[0], ['Observations', 'Predictions'],
+                  title = title, linewidth = 3 )
+    ax.legend( [f'Observations {args.target}',
+                f'Predictions {args.columns} : {args.target}'] )
 
 #----------------------------------------------------------------------------
 # 
@@ -128,8 +133,10 @@ def PlotSMap( D, args ):
             "  ρ="   + str( round( stats['rho'],  2 ) ) +\
             " RMSE=" + str( round( stats['RMSE'], 2 ) )
 
-    pred.plot( pred.columns[0], ['Observations', 'Predictions'],
-               title = title, linewidth = 3 )
+    ax = pred.plot( pred.columns[0], ['Observations', 'Predictions'],
+                    title = title, linewidth = 3 )
+    ax.legend( [f'Observations {args.target}',
+                f'Predictions {args.columns} : {args.target}'] )
     plt.show()
 
     #---------------------------------------------------------------
@@ -163,10 +170,12 @@ def PlotMutualInfo( df, args ):
     fig.suptitle( title )
 
     if numVars == 1 :
-        axs.plot( lags, df.iloc[ :, 1 ], label = 'MI' )
-        axs.plot( lags, df.iloc[ :, 2 ], label = 'CC' )
+        axs.plot( lags, df.iloc[ :, 1 ],
+                  label = f'MI {args.columns} : {args.target}', lw = 3 )
+        axs.plot( lags, df.iloc[ :, 2 ],
+                  label = f'CC {args.columns} : {args.target}', lw = 3 )
         axs.legend()
-        axs.set_title( args.columns[ 0 ] + ":" + args.target, y = 0 )
+
     else:
         MI_cols = range( 1, numVars + 1 )
         CC_cols = range( numVars + 1, 2 * numVars + 1 )
@@ -177,10 +186,12 @@ def PlotMutualInfo( df, args ):
 
             for j in range( nRowCol ) :
                 ax = axs[i,j]
-                ax.plot( lags, df.loc[ :, colNames[MI_cols[k]] ], label='MI' )
-                ax.plot( lags, df.loc[ :, colNames[CC_cols[k]] ], label='CC' )
+                ax.plot( lags, df.loc[ :, colNames[MI_cols[k]] ],
+                         label = 'MI', lw = 3 )
+                ax.plot( lags, df.loc[ :, colNames[CC_cols[k]] ],
+                         label = 'CC', lw = 2 )
                 ax.legend()
-                ax.set_title( args.columns[ k ] + ":" + args.target,y=0 )
+                ax.set_title( args.columns[k] + ":" + args.target, y=0 )
 
                 k = k + 1
 
