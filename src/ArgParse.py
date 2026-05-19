@@ -94,6 +94,12 @@ def ParseCmdLine():
                         action = 'store', default = 0,
                         help = 'Time vector exclusion radius (0 default).')
 
+    parser.add_argument('-xr', '--exclusionRadii',
+                        dest   = 'exclusionRadii', type = str,
+                        action = 'store',
+                        default = "0 1 2 3 4 5 6 7 8 9 10 12 14 16 18 20 25 30",
+                        help = 'Predict Exclusion Radius radii.')
+
     parser.add_argument('-M', '--multiview',
                         dest   = 'multiview', type = int,
                         action = 'store', default = 0,
@@ -165,7 +171,17 @@ def ParseCmdLine():
     parser.add_argument('-nt', '--nProcess',
                         dest   = 'nProcess', type = int,
                         action = 'store', default = 4,
-                        help = 'Number of threads.')
+                        help = 'Number of multiprocessing instances.')
+
+    parser.add_argument('-mp', '--mpMethod',
+                        dest   = 'mpMethod', type = str,
+                        action = 'store', default = None,
+                        help = 'multiprocessing start context')
+
+    parser.add_argument('-cz', '--chunksize',
+                        dest   = 'chunksize', type = int,
+                        action = 'store', default = 1,
+                        help = 'multiprocessing chunksize.')
 
     parser.add_argument('-df', '--dataFrameName',
                         dest   = 'dataFrameName', type = str, 

@@ -1,21 +1,21 @@
-
 # Python distribution modules
 import sys
 from   io          import BytesIO
 from   os          import environ
 from   collections import OrderedDict
 from   time        import sleep
+from   multiprocessing import get_start_method, get_context
 
 # Community modules
-from   IPython.display   import display
-from   IPython.display   import clear_output as clearDashboard
-import ipywidgets        as     widgets
-from   matplotlib        import pyplot as plt # Explicit plt.show in Output
+from   IPython.display import display
+from   IPython.display import clear_output as clearDashboard
+import ipywidgets      as     widgets
+from   matplotlib      import pyplot as plt # Explicit plt.show in Output
 
-from   pandas            import DataFrame, read_csv, read_feather, to_datetime
-from   pyEDM             import *
-from   pyEDM             import __version__     as pyEDMVersion
-from   pyEDM             import __versionDate__ as pyEDMVersionDate
+from   pandas import DataFrame, read_csv, read_feather, to_datetime
+from   pyEDM  import *
+from   pyEDM  import __version__     as pyEDMVersion
+from   pyEDM  import __versionDate__ as pyEDMVersionDate
 
 from IPython.core.getipython import get_ipython
 
@@ -71,7 +71,7 @@ outputTab.set_title( 1, 'Output'  )
 outputTab.set_title( 2, '2D Plot' )
 outputTab.set_title( 3, '3D Plot' )
 
-version = "Version 0.9.4 2026-05-17" + \
+version = "Version 0.9.5 2026-05-19" + \
           "  pyEDM: " + pyEDMVersion + " " + pyEDMVersionDate +\
           "  ipywidgets: " + widgets.__version__
 
@@ -96,7 +96,8 @@ def RunButtonClicked( b ):
 
     if len( args.CE ) and \
        method in ['Simplex', 'SMap', 'Embed Dimension',
-                  'Predict Interval', 'Predict Nonlinear'] :
+                  'Predict Interval', 'Predict Nonlinear',
+                  'Predict Exclusion Radius'] :
         validLib = dataFrameIn.eval( args.CE )
     else :
         validLib = []
@@ -116,6 +117,8 @@ def RunButtonClicked( b ):
             dataFrameOut = PredictInterval_()
         elif 'Predict Nonlinear' in method :
             dataFrameOut = PredictNonlinear_()
+        elif 'Predict Exclusion Radius' in method :
+            dataFrameOut = PredictExclusionRadius_()
         elif 'Embed' in method :
             dataFrameOut = Embed_()
         elif 'Mutual Information' in method :
@@ -164,6 +167,8 @@ def onMethodChange( change ):
         PredictIntervalDashboard()
     elif 'Predict Nonlinear' in newMethod :
         PredictNonlinearDashboard()
+    elif 'Predict Exclusion Radius' in newMethod :
+        PredictExclusionRadiusDashboard()
     elif 'Embed' in newMethod :
         EmbedDashboard()
     elif 'Data' in newMethod :
@@ -429,6 +434,7 @@ def Dashboard():
                                          'Embed Dimension',
                                          'Predict Interval',
                                          'Predict Nonlinear',
+                                         'Predict Exclusion Radius',
                                          'Embed',
                                          'Mutual Information',
                                          'Data' ],
@@ -483,6 +489,9 @@ def Dashboard():
 
     exclusionRadius = widgets.IntSlider( value=0, min=0, max=100, step=1,
                                          description='exclRad')
+
+    radii = widgets.Text( value=args.exclusionRadii, description='X radii',
+                          layout = widgets.Layout(width='100%') )
 
     theta = widgets.FloatText( value=3, description='theta',
                                layout = widgets.Layout(width='50%') )
@@ -615,6 +624,7 @@ def Dashboard():
     Widgets['Tp']              = Tp
     Widgets['maxTp']           = maxTp
     Widgets['exclusionRadius'] = exclusionRadius
+    Widgets['radii']           = radii
     Widgets['theta']           = theta
     Widgets['thetas']          = thetas
     Widgets['alpha']           = alpha
@@ -676,6 +686,7 @@ def UpdateArgs():
     args.Tp              = Widgets['Tp'].value
     args.maxTp           = Widgets['maxTp'].value
     args.exclusionRadius = Widgets['exclusionRadius'].value
+    args.exclusionRadii  = Widgets['radii'].value
     args.theta           = Widgets['theta'].value
     args.thetas          = Widgets['thetas'].value
     args.tau             = Widgets['tau'].value
@@ -811,6 +822,26 @@ def PredictIntervalDashboard():
     mid_box   = widgets.VBox( [ Widgets['maxTp'],
                                 Widgets['E'], Widgets['tau'],
                                 Widgets['exclusionRadius'], Widgets['CE'] ] )
+
+    right_box = widgets.VBox( [ #Widgets['outputFile'],
+                                Widgets['nProcess'], Widgets['plot'],
+                                Widgets['embedded'], Widgets['noTime'],
+                                Widgets['verbose'] ] )
+
+    RenderDashboard( left_box, mid_box, right_box )
+
+#============================================================================
+def PredictExclusionRadiusDashboard():
+    '''Select Predict Exclusion Radius widgets'''
+
+    # Organize widgets 
+    left_box  = widgets.VBox( [ Widgets['method'],
+                                Widgets['lib'],     Widgets['pred'],
+                                Widgets['columns'], Widgets['target'] ] )
+
+    mid_box   = widgets.VBox( [ Widgets['E'],   Widgets['Tp'], 
+                                Widgets['tau'], Widgets['radii'],
+                                Widgets['CE'] ] )
 
     right_box = widgets.VBox( [ #Widgets['outputFile'],
                                 Widgets['nProcess'], Widgets['plot'],
@@ -1015,6 +1046,8 @@ def EmbedDimension_():
                         ignoreNan   = True,
                         verbose     = args.verbose,
                         numProcess  = args.nProcess,
+                        mpMethod    = GetMPContext(args.mpMethod)._name,
+                        chunksize   = args.chunksize, # <- | Needs interface
                         showPlot    = False )
 
     with dfOutput :
@@ -1050,6 +1083,8 @@ def PredictInterval_():
                          ignoreNan   = True,
                          verbose     = args.verbose,
                          numProcess  = args.nProcess,
+                         mpMethod    = GetMPContext(args.mpMethod)._name,
+                         chunksize   = args.chunksize, # <- | Needs interface
                          showPlot    = False )
 
     with dfOutput :
@@ -1060,6 +1095,43 @@ def PredictInterval_():
         Plot2DOutput.clear_output()
         with Plot2DOutput :
             PlotPredictInterval( D, args )
+            plt.show()
+        display( Plot2DOutput )
+
+    return D
+
+#============================================================================
+#@dfOutput.capture() # Decorator: Not used : Explicit Output context used
+def PredictExclusionRadius_():
+    '''Interface for PredictExclusionRadius()'''
+
+    D = PredictExclusionRadius( dataFrame   = dataFrameIn,
+                                columns     = args.columns,
+                                target      = args.target,
+                                lib         = args.lib,
+                                pred        = args.pred,
+                                Tp          = args.Tp,
+                                E           = args.E,
+                                tau         = args.tau,
+                                exclusionRadius = args.exclusionRadii,
+                                embedded    = args.embedded,
+                                validLib    = validLib,
+                                noTime      = args.noTime,
+                                ignoreNan   = True,
+                                verbose     = args.verbose,
+                                numProcess  = args.nProcess,
+                                mpMethod    = GetMPContext(args.mpMethod)._name,
+                                chunksize   = args.chunksize, # <-Needs interface
+                                showPlot    = False )
+
+    with dfOutput :
+        display( D )
+
+    if args.plot :
+        plt.close('all')
+        Plot2DOutput.clear_output()
+        with Plot2DOutput :
+            PlotPredictExclusionRadius( D, args )
             plt.show()
         display( Plot2DOutput )
 
@@ -1088,6 +1160,8 @@ def PredictNonlinear_():
                           ignoreNan   = True,
                           verbose     = args.verbose,
                           numProcess  = args.nProcess,
+                          mpMethod    = GetMPContext(args.mpMethod)._name,
+                          chunksize   = args.chunksize, # <- | Needs interface
                           showPlot    = False )
 
     with dfOutput :
@@ -1131,7 +1205,9 @@ def Multiview_():
                    excludeTarget   = args.excludeTarget,
                    ignoreNan       = True,
                    verbose         = args.verbose,
-                   numProcess      = args.nProcess )
+                   numProcess      = args.nProcess,
+                   mpMethod        = GetMPContext(args.mpMethod)._name,
+                   chunksize       = args.chunksize ) # <- | Needs interface
 
     with dfOutput :
         display( D[ 'View' ] )
@@ -1165,8 +1241,8 @@ def CCM_():
              embedded        = args.embedded,
              includeData     = args.includeData,
              noTime          = False,
-             mpMethod        = None,   # Needs interface
-             sharedMB        = 0.01,   # Needs interface
+             mpMethod        = GetMPContext(args.mpMethod)._name,
+             sharedMB        = 0.01,          # Needs interface
              verbose         = args.verbose )
 
     with dfOutput :
@@ -1281,6 +1357,41 @@ def ReadCSV( filepath = None ):
             display( print( error ) )
 
     return df
+
+#============================================================================
+def GetMPContext(mpMethod=None):
+    """Return a multiprocessing context that is safe with NumPy / BLAS.
+
+    If mpContext is not None: get mpContext
+    else try system default
+    finally try *forkserver* first (faster on Linux), falls back to *spawn*.
+    Raises ValueError if neither is available. fork is never used.
+    """
+    allowed = ("forkserver", "spawn")
+
+    if mpMethod is not None:
+        if mpMethod not in allowed:
+            raise ValueError(
+                "jpyEDM requires 'forkserver' or 'spawn' mpMethod"
+            )
+        return get_context(mpMethod)
+
+    # No mpMethod specified: try system default within allowed
+    current = get_start_method(allow_none=True)
+    if current in allowed:
+        return get_context(current)
+
+    # Last chance: try forkserver then spawn
+    for method in ("forkserver", "spawn"):
+        try:
+            return get_context(method)
+        except ValueError:
+            continue
+
+    raise ValueError(
+        "No safe multiprocessing start method available. "
+        "jpyEDM requires 'forkserver' or 'spawn'."
+    )
 
 #============================================================================
 def Notebook():

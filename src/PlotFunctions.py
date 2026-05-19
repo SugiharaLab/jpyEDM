@@ -56,6 +56,23 @@ def PlotPredictInterval( df, args ):
 #----------------------------------------------------------------------------
 # 
 #----------------------------------------------------------------------------
+def PlotPredictExclusionRadius( df, args ):
+
+    if args.embedded :
+        E = len( args.columns )
+    else :
+        E = args.E
+
+    title = args.inputFile + "\nE=" + str( E ) + " Tp=" + str( args.Tp )
+
+    ax = df.plot( 'Exclusion radius', 'rho', title = title, linewidth = 3,
+                  label = f'{args.columns} : {args.target}' )
+    ax.set( xlabel = "Exclusion Radius",
+            ylabel = "Prediction Skill ρ" )
+
+#----------------------------------------------------------------------------
+# 
+#----------------------------------------------------------------------------
 def Plot3D( D, columnList, args ):
 
     fig = plt.figure()
